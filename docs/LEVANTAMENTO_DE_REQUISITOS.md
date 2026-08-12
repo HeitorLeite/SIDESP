@@ -286,6 +286,7 @@ O Documento de Visão não apresenta uma lista explícita e mensurável de RNFs.
 | `RNF-SEG-005` | Login, recuperação, cadastro e integrações DEVEM ter limites contra abuso. Limites e comportamento de bloqueio serão definidos com base no risco e na capacidade. | Alta | Pendente: valores |
 | `RNF-SEG-006` | Uploads DEVEM validar tipo real, extensão, tamanho, nome e conteúdo; devem ser armazenados fora de caminho executável, com varredura de malware quando aplicável. | Crítica | Proposto; formatos/limites pendentes |
 | `RNF-SEG-007` | Ações administrativas, autenticação, chamada/correção, justificativa, inscrição excepcional, exportação e mudanças de permissão DEVEM gerar auditoria com ator, ação, alvo, instante e resultado, sem dado sensível excessivo. | Crítica | Proposto; retenção pendente |
+| `RNF-SEG-008` | As APIs DEVEM aplicar limitação de requisições por usuário, endereço IP, credencial e endpoint, conforme o risco, para reduzir abuso e indisponibilidade. Ao exceder o limite, DEVEM responder com HTTP 429, sem processar a operação, e registrar o evento para monitoramento. | Crítica | Proposto; limites e intervalos pendentes |
 | `RNF-PRI-001` | O sistema DEVE coletar apenas dados necessários, classificar CPF, contato, saúde, menores, frequência e documentos, e registrar finalidade, hipótese legal, acesso, compartilhamento, retenção e descarte antes da produção. | Crítica | Pendente e bloqueador |
 | `RNF-PRI-002` | Dados de saúde e comprovantes DEVEM ser restritos a papéis formalmente aprovados; a interface e os relatórios NÃO DEVEM expô-los por padrão. | Crítica | Proposto; papéis pendentes |
 | `RNF-PRI-003` | Mapas de calor e relatórios agregados DEVEM aplicar limiar que impeça reidentificação de grupos pequenos. O limiar será aprovado por negócio/privacidade. | Alta | Pendente: limiar |
@@ -399,10 +400,11 @@ Para uma funcionalidade individual ser aceita, o caminho principal, estados vazi
 
 | ID | Decisão | Fonte | Estado |
 | --- | --- | --- | --- |
-| `DEC-001` | A documentação de requisitos representa o produto completo, não apenas o backend. | Orientação do solicitante | Aceita para este documento |
-| `DEC-002` | O backend alvo será desenvolvido em Java/Spring Boot. | Orientação do solicitante | Diretriz técnica; detalhamento pertence à Arquitetura/ADR |
-| `DEC-003` | O README será elaborado posteriormente, quando houver código relevante. | Orientação do solicitante | Aceita para a sequência de trabalho |
-| `DEC-004` | O protótipo Java básico não define o escopo nem a arquitetura do produto. | Orientação do solicitante | Aceita |
+| `DEC-001` | A documentação de requisitos representa o produto completo, não apenas o backend. | Orientação Tech Lead | Aceita para este documento |
+| `DEC-002` | O backend alvo será desenvolvido em Java/Spring Boot. | Orientação do Tech Lead | Diretriz técnica; detalhamento pertence à Arquitetura/ADR |
+| `DEC-003` | O README será elaborado posteriormente, quando houver código relevante. | Orientação do Tech Lead | Aceita para a sequência de trabalho |
+| `DEC-004` | O protótipo Java básico não define o escopo nem a arquitetura do produto. | Orientação do Tech Lead | Aceita |
+| `DEC-005` | O frontend alvo será desenvolvido em Angular/TypeScript. | Orientação do Tech Lead | Diretriz técnica; detalhamento pertence à Arquitetura/ADR |
 
 ## 18. Questões pendentes
 
