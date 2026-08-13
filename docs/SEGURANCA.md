@@ -936,4 +936,4 @@ Referências verificadas em 12/08/2026:
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
-| `0.1.0` | 12/08/2026 | Equipe SIDESP, com consolidação documental assistida por IA | Primeira baseline de segurança cobrindo governança, dados, identidade, sessão, autorização, API, arquivos, frontend, backend, banco, segredos, privacidade, fornecedores, logs, resiliência, infraestrutura, supply chain, CI/CD, testes, vulnerabilidades, incidentes e exceções | Rascunho |
+| `0.1.0` | 12/08/2026 | Heitor Leite | Primeira baseline de segurança cobrindo governança, dados, identidade, sessão, autorização, API, arquivos, frontend, backend, banco, segredos, privacidade, fornecedores, logs, resiliência, infraestrutura, supply chain, CI/CD, testes, vulnerabilidades, incidentes e exceções | Rascunho |

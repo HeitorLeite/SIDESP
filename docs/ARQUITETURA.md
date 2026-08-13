@@ -20,9 +20,9 @@
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Product Owner/Secretaria | A definir | Pendente | — |
-| Liderança técnica | A definir | Pendente | — |
-| Backend | A definir | Pendente | — |
+| Product Owner/Secretaria | Lívia Andrade | Pendente | — |
+| Liderança técnica | Heitor Leite | Pendente | — |
+| Backend | Heitor Leite | Pendente | — |
 | Frontend | A definir | Pendente | — |
 | Segurança e privacidade | A definir | Pendente | — |
 | Operações/Infraestrutura | A definir | Pendente | — |
@@ -1037,4 +1037,4 @@ Mudanças que exigem ADR/revisão reforçada incluem banco, autenticação, sess
 
 | Versão | Data | Alteração | Autor |
 | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Arquitetura inicial: contexto, monólito modular, camadas, módulos, APIs, outbox, dados, integrações, implantação, segurança e operação | Equipe SIDESP, com apoio de IA |
+| `0.1.0` | 13/08/2026 | Arquitetura inicial: contexto, monólito modular, camadas, módulos, APIs, outbox, dados, integrações, implantação, segurança e operação | Heitor Leite |

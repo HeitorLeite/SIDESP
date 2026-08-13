@@ -1198,4 +1198,4 @@ Métricas técnicas usam identificadores de baixa sensibilidade e agregação. T
 
 | Versão | Data | Alteração | Autor |
 | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Modelo lógico inicial, DER modular, dicionário, constraints, índices, classificação e operação segura | Equipe SIDESP, com apoio de IA |
+| `0.1.0` | 13/08/2026 | Modelo lógico inicial, DER modular, dicionário, constraints, índices, classificação e operação segura | Heitor Leite |

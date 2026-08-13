@@ -1100,4 +1100,4 @@ flowchart LR
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Equipe SIDESP, com consolidação documental assistida por IA | Primeira versão com onze fluxos críticos em raias, incluindo sucesso, erros, autorização, concorrência, arquivos, integrações, compensação, auditoria e incidente | Rascunho |
+| `0.1.0` | 13/08/2026 | Heitor Leite | Primeira versão com onze fluxos críticos em raias, incluindo sucesso, erros, autorização, concorrência, arquivos, integrações, compensação, auditoria e incidente | Rascunho |

@@ -672,5 +672,5 @@ Commits automáticos de ferramenta podem usar formato próprio somente quando a 
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Equipe SIDESP, com consolidação documental assistida por IA | Primeira convenção de commits, incluindo formato, tipos, escopos, rastreabilidade, breaking changes, segurança, assinatura, exemplos e checklists | Rascunho |
+| `0.1.0` | 13/08/2026 | Heitor Leite | Primeira convenção de commits, incluindo formato, tipos, escopos, rastreabilidade, breaking changes, segurança, assinatura, exemplos e checklists | Rascunho |
 

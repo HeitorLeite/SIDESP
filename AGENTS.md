@@ -754,4 +754,4 @@ Controles com curinga significam a família completa; o agente deve abrir o docu
 
 | Versão | Data | Alteração | Autor |
 | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Instruções iniciais para agentes: autoridade, leitura, segurança, arquitetura, ferramentas, testes, Git, parada e entrega | Equipe SIDESP, com apoio de IA |
+| `0.1.0` | 13/08/2026 | Instruções iniciais para agentes: autoridade, leitura, segurança, arquitetura, ferramentas, testes, Git, parada e entrega | Heitor Leite |

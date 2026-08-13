@@ -28,8 +28,8 @@
 | Responsável de negócio | Pendente | Não aprovado | — |
 | Product Owner | Lívia Andrade | Pendente de revisão | — |
 | Responsável técnico | Heitor Leite | Pendente de revisão | — |
-| Segurança | Pendente | Não avaliado | — |
-| Privacidade/Encarregado | Pendente | Não avaliado | — |
+| Segurança | Heitor Leite | Não avaliado | — |
+| Privacidade/Encarregado | Heitor Leite | Não avaliado | — |
 | QA | Micael Phillipini | Pendente de revisão dos critérios de aceite | — |
 
 ## 1. Finalidade e fontes
@@ -478,5 +478,5 @@ Quando a implementação começar, cada PR deverá citar os IDs afetados e os te
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
-| `0.1.0` | 12/08/2026 | Equipe SIDESP, com consolidação documental assistida por IA | Primeira consolidação do Documento de Visão no padrão do Guia Mestre; inclusão de critérios de aceite, dados, erros, riscos, pendências e rastreabilidade | Rascunho |
+| `0.1.0` | 12/08/2026 | Heitor Leite | Primeira consolidação do Documento de Visão no padrão do Guia Mestre; inclusão de critérios de aceite, dados, erros, riscos, pendências e rastreabilidade | Rascunho |
 

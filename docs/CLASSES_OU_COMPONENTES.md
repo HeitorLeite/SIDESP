@@ -1349,4 +1349,4 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
-| `0.1.0` | 13/08/2026 | Equipe SIDESP, com consolidação documental assistida por IA | Refinamento do diagrama de classes do Documento de Visão em seis fluxos críticos; inclusão de serviços, interfaces, estados, invariantes, segurança, concorrência e rastreabilidade | Rascunho |
+| `0.1.0` | 13/08/2026 | Heitor Leite | Refinamento do diagrama de classes do Documento de Visão em seis fluxos críticos; inclusão de serviços, interfaces, estados, invariantes, segurança, concorrência e rastreabilidade | Rascunho |
