@@ -213,7 +213,7 @@ Todos os requisitos abaixo estão no estado **Proposto**. A prioridade é propos
 | `RF-FRQ-004` | Professor DEVE registrar conteúdo da aula antes de salvar a chamada e PODE incluir observações permitidas. | Conteúdo vazio impede o salvamento; observações respeitam tamanho e proibição de dados excessivos; chamada e conteúdo ficam vinculados. | `SE016`, `RN014` | Alta | Limites e finalidade das observações pendentes |
 | `RF-FRQ-005` | Professor DEVE consultar dados mínimos e frequência de alunos das próprias turmas. | Apenas campos aprovados e alunos vinculados são exibidos; dados de saúde exigem decisão de necessidade e permissão específica; acesso indevido é bloqueado e auditado. | `SE018`, `RN013` | Crítica | Minimização e acesso emergencial pendentes |
 | `RF-FRQ-006` | Administrador autorizado DEVE corrigir chamada salva somente mediante justificativa. | Estado anterior e novo, autor, data e justificativa são imutavelmente registrados; professor não consegue corrigir nem excluir chamada salva. | `RN019` | Crítica | Prazo e papéis habilitados pendentes |
-| `RF-JUS-001` | Aluno elegível DEVE enviar justificativa para a falta permitida, com comprovante. | Falta pertencente ao aluno, elegível e no prazo aceita um arquivo válido; ausência de arquivo, duplicidade, tipo/tamanho inválido ou falta inelegível é rejeitada. | `SE011`, `RN003`, `RN004` | Crítica | Conflito de regras de faltas; arquivo/retensão pendentes |
+| `RF-JUS-001` | Aluno elegível DEVE enviar justificativa para a falta permitida, com comprovante. | Falta pertencente ao aluno, elegível e no prazo aceita um arquivo válido; ausência de arquivo, duplicidade, tipo/tamanho inválido ou falta inelegível é rejeitada. | `SE011`, `RN003`, `RN004` | Crítica | Conflito de regras de faltas; arquivo/retenção pendentes |
 | `RF-JUS-002` | Administrador autorizado DEVE analisar e aceitar ou recusar justificativa. | Decisão exige motivo quando recusada, registra autor/data e não pode ser executada por professor; reanálise segue regra ainda a definir. | `SE026`, `RN024` | Alta | Permissão administrativa e recurso pendentes |
 | `RF-JUS-003` | O sistema DEVE notificar o aluno sobre a decisão da justificativa. | Uma decisão consolidada gera no máximo uma notificação por canal/evento; falha fica registrada e sujeita à política de nova tentativa. | `RN025` | Alta | Canal e conteúdo aprovados pendentes |
 
@@ -405,6 +405,7 @@ Para uma funcionalidade individual ser aceita, o caminho principal, estados vazi
 | `DEC-003` | O README será elaborado posteriormente, quando houver código relevante. | Orientação do Tech Lead | Aceita para a sequência de trabalho |
 | `DEC-004` | O protótipo Java básico não define o escopo nem a arquitetura do produto. | Orientação do Tech Lead | Aceita |
 | `DEC-005` | O frontend alvo será desenvolvido em Angular/TypeScript. | Orientação do Tech Lead | Diretriz técnica; detalhamento pertence à Arquitetura/ADR |
+| `DEC-006` | O nome oficial do produto é **Sistema Integrado de Desenvolvimento Esportivo Público**, mantendo a sigla SIDESP. | Decisão da equipe em 13/08/2026 | Aceita; deve ser usada em toda a documentação |
 
 ## 18. Questões pendentes
 
@@ -441,22 +442,21 @@ Para uma funcionalidade individual ser aceita, o caminho principal, estados vazi
 | `Q-022` | Haverá QR Code para presença? O termo está no glossário da visão, mas não há requisito funcional correspondente. |
 | `Q-023` | Quais dados atuais serão migrados, de quais planilhas/sistemas e qual será a data de corte? |
 | `Q-024` | Quais notificações também aparecem no próprio sistema e por quanto tempo ficam visíveis? |
-| `Q-025` | Qual é o nome oficial: “Sistemas Integrado...” (capa) ou “Sistema Integrado...”; e a sigla deve permanecer SIDESP? |
 
 ## 19. Rastreabilidade
 
-Os IDs de casos de uso abaixo são **propostos** e devem ser aplicados/ajustados no documento de casos de uso existente. Não indicam que os diagramas atuais já estejam numerados.
+Os IDs abaixo correspondem ao catálogo oficial definido em `CASOS_DE_USO.md`. Qualquer inclusão, remoção ou renumeração deve ser atualizada simultaneamente nos dois documentos.
 
-| Módulo | Requisitos | Regras | Casos de uso propostos | Testes esperados | Código alvo |
+| Módulo | Requisitos | Regras | Casos de uso oficiais | Testes esperados | Código alvo |
 | --- | --- | --- | --- | --- | --- |
-| Público/notícias/mapas | `RF-PUB-*`, `RF-ADM-006` | `RN-021` | `UC-PUB-01` Consultar notícias; `UC-PUB-02` Consultar polos; `UC-ADM-06` Gerir notícias | `CT-PUB-*`, `CT-ADM-NOT-*` | Pendente |
-| Identidade/perfil | `RF-IDN-*`, `RF-ADM-007` | `RN-016/017/022` | `UC-IDN-01` Cadastrar; `UC-IDN-02` Autenticar; `UC-IDN-03` Recuperar; `UC-IDN-04` Editar perfil; `UC-ADM-07` Gerir administradores | `CT-IDN-*`, `CT-AUT-*` | Pendente |
-| Inscrição/fila | `RF-INS-*` | `RN-001`, `RN-008` a `RN-012`, `RN-018`, `RN-023` | `UC-INS-01` Inscrever; `UC-INS-02` Cancelar; `UC-INS-03` Gerir fila; `UC-INS-04` Selecionar candidato; `UC-INS-05` Exceção administrativa | `CT-INS-*`, incluindo concorrência/idempotência | Pendente |
-| Chamada/frequência | `RF-FRQ-*` | `RN-002`, `RN-005/006`, `RN-013/014/019` | `UC-FRQ-01` Realizar chamada; `UC-FRQ-02` Consultar frequência; `UC-FRQ-03` Corrigir chamada | `CT-FRQ-*`, autorização por turma | Pendente |
-| Justificativa | `RF-JUS-*` | `RN-003/004/024/025` | `UC-JUS-01` Enviar justificativa; `UC-JUS-02` Analisar justificativa | `CT-JUS-*`, upload/privacidade | Pendente |
-| Cadastros operacionais | `RF-ADM-001` a `RF-ADM-005` | `RN-008`, `RN-012/013/015/016/018` | `UC-ADM-01` Gerir polos; `UC-ADM-02` modalidades; `UC-ADM-03` professores; `UC-ADM-04` turmas; `UC-ADM-05` alunos | `CT-ADM-*`, inativação/histórico | Pendente |
-| Comunicação | `RF-COM-*` | `RN-005` a `RN-007`, `RN-010/011/020/025` | `UC-COM-01` Enviar aviso; `UC-COM-02` Notificar falta; `UC-COM-03` Notificar vaga | `CT-COM-*`, falha/replay/fallback | Pendente |
-| Relatórios/análises | `RF-REL-*` | Regras de dados aplicáveis | `UC-REL-01` Gerar relatório; `UC-REL-02` Exportar; `UC-REL-03` Visualizar mapa de calor | `CT-REL-*`, autorização/agregação/formula injection | Pendente |
+| Público/notícias/mapas | `RF-PUB-*`, `RF-ADM-006` | `RN-021` | `UC-PUB-01` Consultar notícias; `UC-PUB-02` Consultar detalhe de notícia; `UC-PUB-03` Consultar polos e modalidades; `UC-ADM-11` Gerenciar notícias; `UC-AUT-05` Publicar notícia agendada | `CT-PUB-*`, `CT-ADM-NOT-*` | Pendente |
+| Identidade/perfil | `RF-IDN-*`, `RF-ADM-007` | `RN-016/017/022` | `UC-IDN-01` Cadastrar aluno; `UC-IDN-02` Autenticar usuário; `UC-IDN-03` Recuperar acesso; `UC-IDN-04` Atualizar perfil; `UC-IDN-05` Alterar senha; `UC-ADM-12` Gerenciar administradores | `CT-IDN-*`, `CT-AUT-*` | Pendente |
+| Inscrição/fila/seleção | `RF-INS-*` | `RN-001`, `RN-008` a `RN-012`, `RN-018`, `RN-023` | `UC-INS-01` Consultar ofertas esportivas; `UC-INS-02` Solicitar inscrição; `UC-INS-03` Entrar na lista de espera; `UC-INS-04` Cancelar inscrição; `UC-INS-05` Consultar posição na espera; `UC-INS-06` Consultar turmas e aulas; `UC-INS-07` Confirmar oferta de vaga; `UC-ADM-07` Gerenciar inscrições e lista de espera; `UC-ADM-08` Gerenciar processo seletivo; `UC-ADM-13` Executar exceção de inscrição; `UC-AUT-01` Ofertar vaga da lista de espera | `CT-INS-*`, incluindo concorrência/idempotência | Pendente |
+| Chamada/frequência | `RF-FRQ-*` | `RN-002`, `RN-005/006`, `RN-013/014/019` | `UC-FRQ-01` Consultar frequência; `UC-PRF-01` Consultar turmas vinculadas; `UC-PRF-02` Realizar chamada; `UC-PRF-03` Registrar diário da aula; `UC-PRF-04` Consultar alunos da turma; `UC-ADM-10` Corrigir chamada | `CT-FRQ-*`, autorização por turma | Pendente |
+| Justificativa | `RF-JUS-*` | `RN-003/004/024/025` | `UC-JUS-01` Enviar justificativa; `UC-JUS-02` Anexar comprovante; `UC-ADM-09` Analisar justificativa; `UC-AUT-04` Notificar decisão de justificativa | `CT-JUS-*`, upload/privacidade | Pendente |
+| Cadastros operacionais | `RF-ADM-001` a `RF-ADM-005` | `RN-008`, `RN-012/013/015/016/018` | `UC-ADM-01` Gerenciar polos; `UC-ADM-02` Gerenciar modalidades; `UC-ADM-03` Gerenciar professores; `UC-ADM-04` Gerenciar vínculos de professor; `UC-ADM-05` Gerenciar turmas; `UC-ADM-06` Gerenciar alunos | `CT-ADM-*`, inativação/histórico | Pendente |
+| Comunicação | `RF-COM-*` | `RN-005` a `RN-007`, `RN-010/011/020/025` | `UC-COM-01` Enviar aviso à turma; `UC-COM-02` Enviar mensagem via WhatsApp; `UC-COM-03` Consultar histórico de notificações; `UC-AUT-02` Alertar limite de faltas; `UC-AUT-03` Cancelar por excesso de faltas | `CT-COM-*`, falha/replay/fallback | Pendente |
+| Relatórios/análises | `RF-REL-*` | Regras de dados aplicáveis | `UC-REL-01` Gerar relatório; `UC-REL-02` Exportar relatório; `UC-REL-03` Visualizar mapa de calor | `CT-REL-*`, autorização/agregação/formula injection | Pendente |
 
 Quando a implementação começar, cada PR deverá citar os IDs afetados e os testes deverão usar os padrões acima ou registrar mapeamento equivalente. O estado de requisito só muda de `Proposto` para `Parcial` ou `Atual` após evidência em código e teste aceito.
 
