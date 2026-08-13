@@ -40,7 +40,7 @@ Este documento detalha as classes necessárias aos fluxos de maior risco e compl
 5. notificações e integração com WhatsApp;
 6. relatórios, exportações e proteção contra reidentificação.
 
-Os diagramas representam o **modelo planejado do produto completo**. Eles não são código Java pronto, não impõem tabelas com o mesmo formato e não substituem `ARQUITETURA.md`, `BANCO_DE_DADOS.md` ou o contrato OpenAPI.
+Os diagramas representam o **modelo planejado do produto completo**. Eles não são código Java pronto, não impõem tabelas com o mesmo formato e não substituem `ARQUITETURA.md`, `../database/BANCO_DE_DADOS.md` ou o contrato OpenAPI.
 
 Classes de notícias e consultas públicas não receberam um diagrama próprio nesta versão por apresentarem menor risco estrutural. Elas deverão entrar no modelo completo quando o fluxo editorial e a arquitetura forem detalhados.
 

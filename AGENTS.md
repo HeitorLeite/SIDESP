@@ -47,7 +47,7 @@ Em caso de conflito, seguir a ordem abaixo e parar quando a resolução depender
 2. instruções do ambiente de execução e autorização explícita do responsável;
 3. decisões aprovadas de negócio, segurança, privacidade e arquitetura;
 4. `docs/SEGURANCA.md` e este `AGENTS.md`;
-5. `docs/ARQUITETURA.md`, ADRs aprovados e `docs/BANCO_DE_DADOS.md`;
+5. `docs/ARQUITETURA.md`, ADRs aprovados e `database/BANCO_DE_DADOS.md`;
 6. `docs/LEVANTAMENTO_DE_REQUISITOS.md` e `docs/CASOS_DE_USO.md` aprovados;
 7. contrato OpenAPI, schemas, migrações e documentação técnica vigente;
 8. testes que expressem comportamento aprovado;
@@ -67,7 +67,7 @@ Antes de propor ou executar uma alteração, ler na seguinte ordem:
 5. `docs/LEVANTAMENTO_DE_REQUISITOS.md`;
 6. `docs/CASOS_DE_USO.md` e `docs/ATIVIDADES.md` do fluxo afetado;
 7. `docs/ARQUITETURA.md` e ADRs relacionados;
-8. `docs/BANCO_DE_DADOS.md` e `docs/CLASSES_OU_COMPONENTES.md` quando aplicáveis;
+8. `database/BANCO_DE_DADOS.md` e `docs/CLASSES_OU_COMPONENTES.md` quando aplicáveis;
 9. `AGENTS.md` mais específico do subdiretório;
 10. código, testes, contratos e configurações diretamente envolvidos;
 11. consumidores, integrações e referências dos elementos alterados;
@@ -84,7 +84,7 @@ Se um documento obrigatório estiver ausente, desatualizado ou contraditório, r
 | Atores, permissões e fluxos | `docs/CASOS_DE_USO.md` e `docs/ATIVIDADES.md` | Matriz administrativa ainda possui bloqueadores |
 | Estrutura do domínio | `docs/CLASSES_OU_COMPONENTES.md` | Classes propostas não equivalem automaticamente a código implementado |
 | Arquitetura | `docs/ARQUITETURA.md` e ADRs aprovados | Monólito modular, banco e sessão ainda estão como propostas |
-| Persistência | `docs/BANCO_DE_DADOS.md` e migrações aprovadas | Migração aplicada prevalece para o estado físico; divergência exige correção documental |
+| Persistência | `database/BANCO_DE_DADOS.md` e migrações aprovadas | Migração aplicada prevalece para o estado físico; divergência exige correção documental |
 | Segurança e privacidade | `docs/SEGURANCA.md` | Nenhum agente pode aprovar exceção ou risco residual |
 | API | OpenAPI versionado, quando criado | Código e contrato devem permanecer sincronizados |
 | Commits e integração | `docs/PADRAO_DE_COMMITS.md` | PR e revisão humana são o padrão |
@@ -209,10 +209,11 @@ A estrutura abaixo é proposta para quando o desenvolvimento começar. O agente 
 │   ├── CASOS_DE_USO.md
 │   ├── ATIVIDADES.md
 │   ├── CLASSES_OU_COMPONENTES.md
-│   ├── BANCO_DE_DADOS.md
 │   ├── ARQUITETURA.md
 │   ├── SEGURANCA.md
 │   └── PADRAO_DE_COMMITS.md
+├── database/
+│   └── BANCO_DE_DADOS.md
 ├── backend/
 │   ├── pom.xml
 │   └── src/
@@ -547,7 +548,7 @@ Saída de IA é não confiável até revisão humana. O agente não aprova o pr�
 | Nova/alterada regra | Requisitos, casos de uso, atividades, testes e rastreabilidade |
 | Novo endpoint/campo/erro | OpenAPI, API/README e consumidores |
 | Módulo/dependência arquitetural | `docs/ARQUITETURA.md`, ADR e classes/componentes |
-| Tabela/coluna/índice/retenção | `docs/BANCO_DE_DADOS.md`, migração e privacidade |
+| Tabela/coluna/índice/retenção | `database/BANCO_DE_DADOS.md`, migração e privacidade |
 | Autenticação/autorização/segredo | `docs/SEGURANCA.md`, arquitetura, threat model e runbook |
 | Upload/exportação | Segurança, modelo de dados, contrato e operação |
 | Integração/fornecedor/webhook | Arquitetura, segurança, contrato, privacidade e runbook |
@@ -745,7 +746,7 @@ Não é necessário incluir seções vazias. Para revisão de código, priorizar
 | Pendências de negócio | `Q-001` a `Q-024`, conforme aplicável |
 | Pendências arquiteturais | `ARQ-Q-001` a `ARQ-Q-005`; ADRs propostos em `docs/ARQUITETURA.md` |
 | Git e publicação | `docs/PADRAO_DE_COMMITS.md` |
-| Dados, migrações e retenção | `docs/BANCO_DE_DADOS.md` |
+| Dados, migrações e retenção | `database/BANCO_DE_DADOS.md` |
 | Fluxos e domínio | `docs/CASOS_DE_USO.md`, `docs/ATIVIDADES.md` e `docs/CLASSES_OU_COMPONENTES.md` |
 
 Controles com curinga significam a família completa; o agente deve abrir o documento e selecionar os IDs exatos afetados, não citar apenas o curinga por conveniência.

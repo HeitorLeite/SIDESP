@@ -14,7 +14,7 @@
 | Classificação | Uso interno |
 | Responsável sugerido | Dados/Backend |
 | Revisores necessários | Produto, Backend, Segurança, Privacidade e responsável pelo banco |
-| Documentos de origem | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `ATIVIDADES.md` e `SEGURANCA.md` |
+| Documentos de origem | `../docs/LEVANTAMENTO_DE_REQUISITOS.md`, `../docs/CASOS_DE_USO.md`, `../docs/CLASSES_OU_COMPONENTES.md`, `../docs/ATIVIDADES.md` e `../docs/SEGURANCA.md` |
 
 ## Aprovações
 
@@ -1154,9 +1154,9 @@ Métricas técnicas usam identificadores de baixa sensibilidade e agregação. T
 | Inscrição e espera | `RF-INS-001`, `RF-INS-002`, `RF-INS-003`, `RF-INS-004`, `RF-INS-005`, `RF-INS-006`, `RF-INS-007`, `RF-INS-008`, `RN-001`, `RN-008` a `RN-012`, `RN-018/023` | `UC-INS-*`, `UC-ADM-07/08/13`, `UC-AUT-01` | Fluxos 3 e 4 de atividades; fluxo 3 de classes |
 | Frequência e justificativa | `RF-FRQ-001`, `RF-FRQ-002`, `RF-FRQ-003`, `RF-FRQ-004`, `RF-FRQ-005`, `RF-FRQ-006`, `RF-JUS-001`, `RF-JUS-002`, `RF-JUS-003`, `RF-COM-002/003`, `RN-002` a `RN-007`, `RN-013/014/019/024/025` | `UC-FRQ-01`, `UC-PRF-*`, `UC-JUS-*`, `UC-ADM-09/10`, `UC-AUT-02/03/04` | Fluxos 5 a 7 de atividades; fluxo 4 de classes |
 | Comunicação | `RF-COM-001`, `RF-COM-002`, `RF-COM-003`, `RF-COM-004`, `RF-INS-004`, `RF-JUS-003`, `RN-006/007/010/011/020/025` | `UC-COM-*`, `UC-AUT-01/02/04` | Fluxo 8 de atividades; fluxo 5 de classes |
-| Autorização e auditoria | `RNF-SEG-007`, `RN-017/022`, requisitos administrativos | `UC-ADM-12/13` e casos protegidos | Fluxo 9 de atividades; controles de `SEGURANCA.md` |
+| Autorização e auditoria | `RNF-SEG-007`, `RN-017/022`, requisitos administrativos | `UC-ADM-12/13` e casos protegidos | Fluxo 9 de atividades; controles de `../docs/SEGURANCA.md` |
 | Relatórios e exportações | `RF-REL-001`, `RF-REL-002`, `RF-REL-003`, `RNF-PRI-003`, `RNF-EXP-001` | `UC-REL-*` | Fluxo 10 de atividades; fluxo 6 de classes |
-| Incidente e continuidade | RNFs de segurança, privacidade, disponibilidade e recuperação | Processo operacional | Fluxo 11 de atividades; `SEGURANCA.md` |
+| Incidente e continuidade | RNFs de segurança, privacidade, disponibilidade e recuperação | Processo operacional | Fluxo 11 de atividades; `../docs/SEGURANCA.md` |
 
 ## 20. Pendências bloqueadoras
 

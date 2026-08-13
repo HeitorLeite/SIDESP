@@ -14,7 +14,7 @@
 | Classificação | Uso interno |
 | Responsável sugerido | Arquitetura/Liderança técnica |
 | Revisores necessários | Produto, Backend, Frontend, Dados, Segurança, Privacidade e Operações |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `ATIVIDADES.md`, `BANCO_DE_DADOS.md` e `SEGURANCA.md` |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `ATIVIDADES.md`, `../database/BANCO_DE_DADOS.md` e `SEGURANCA.md` |
 
 ## Aprovações
 
@@ -554,7 +554,7 @@ Um broker externo não é necessário na primeira baseline. O outbox no banco e 
 
 ### 14.2 Banco e transações
 
-- PostgreSQL é a proposta de banco relacional, conforme `BANCO_DE_DADOS.md`.
+- PostgreSQL é a proposta de banco relacional, conforme `../database/BANCO_DE_DADOS.md`.
 - Flyway é a proposta para migrações; a aplicação não executa DDL com sua conta comum.
 - Transação cobre o agregado e os registros de histórico/outbox diretamente relacionados.
 - Isolamento, lock e índice são escolhidos por caso; não se usa transação longa durante chamada externa.
@@ -745,7 +745,7 @@ flowchart LR
 - Fornecedor recebe somente dados mínimos; transferência internacional e suboperadores exigem avaliação.
 - País/região de banco, storage, backup, logs e fornecedores deve ser registrado antes da contratação/produção.
 - Produção não é copiada para desenvolvimento; dados sintéticos são o padrão.
-- Retenção e descarte seguem `BANCO_DE_DADOS.md`; prazos ainda são bloqueadores.
+- Retenção e descarte seguem `../database/BANCO_DE_DADOS.md`; prazos ainda são bloqueadores.
 - Analytics de frontend, se adotado, não recebe CPF, telefone, e-mail, identificador desnecessário, frequência ou conteúdo sensível.
 
 ## 20. Observabilidade
