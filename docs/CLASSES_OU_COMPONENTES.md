@@ -9,25 +9,28 @@
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
 | Órgão demandante | Secretaria de Esportes de Guaratinguetá |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.1.0`; `CASOS_DE_USO.md` `0.1.0`; `SEGURANCA.md` `0.1.0` |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`; `CASOS_DE_USO.md` `0.2.0`; `SEGURANCA.md` `0.1.0` |
 | Fonte inicial | Documento de Visão — SIDESP, versão `1.0`, seção 6.4 |
-| Responsável técnico | Heitor Leite — Tech Lead |
-| Responsável de negócio | Secretaria de Esportes — representante nominal pendente |
-| Versão | `0.1.0` |
-| Data | 13/08/2026 |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| QA | Micael Phillipini |
+| Versão | `0.2.0` |
+| Data | 14/08/2026 |
 | Classificação | Interna |
-| Status | Rascunho — modelo proposto, ainda não implementado |
-| Próxima revisão | Após resolução das pendências da seção 15 ou mudança de regra, contrato, persistência ou arquitetura |
+| Status | Pronto para revisão — modelo proposto, ainda não implementado |
+| Próxima revisão | Revisão formal e aprovação pela equipe |
 
 ## Aprovações
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Responsável de negócio | Pendente | Não aprovado | — |
-| Product Owner | Lívia Andrade | Pendente de revisão | — |
-| Tech Lead | Heitor Leite | Pendente de revisão | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente de revisão | — |
+| Product Owner | Livia Andrade | Pendente de revisão | — |
+| Responsável técnico | Heitor Leite | Pendente de revisão | — |
 | QA | Micael Phillipini | Pendente de revisão das invariantes | — |
-| Segurança/Privacidade | Pendente | Não avaliado | — |
+| Segurança e privacidade interna | Heitor Leite | Pendente de revisão | — |
+| Validação institucional de privacidade | Prefeitura/Embrass, antes da implantação real | Fora da aprovação acadêmica atual | — |
 
 ## 1. Objetivo e escopo
 
@@ -37,10 +40,10 @@ Este documento detalha as classes necessárias aos fluxos de maior risco e compl
 2. estrutura das atividades esportivas e vínculos de professores;
 3. inscrição, lista de espera e processo seletivo;
 4. chamada, frequência e justificativa de falta;
-5. notificações e integração com WhatsApp;
-6. relatórios, exportações e proteção contra reidentificação.
+5. notificações internas e e-mail;
+6. componentes futuros de WhatsApp, relatórios, exportações e mapas de calor.
 
-Os diagramas representam o **modelo planejado do produto completo**. Eles não são código Java pronto, não impõem tabelas com o mesmo formato e não substituem `ARQUITETURA.md`, `../database/BANCO_DE_DADOS.md` ou o contrato OpenAPI.
+Os diagramas representam o **modelo planejado do produto completo**. A primeira versão terá frontend Angular, API e backend Java/Spring Boot e MySQL 8.x. WhatsApp, relatórios, exportações, mapas e QR Code aparecem apenas como evolução futura. Os diagramas não são código Java pronto, não impõem tabelas com o mesmo formato e não substituem `ARQUITETURA.md`, `../database/BANCO_DE_DADOS.md` ou o futuro contrato OpenAPI.
 
 Classes de notícias e consultas públicas não receberam um diagrama próprio nesta versão por apresentarem menor risco estrutural. Elas deverão entrar no modelo completo quando o fluxo editorial e a arquitetura forem detalhados.
 
@@ -55,9 +58,26 @@ Um único diagrama com todas as classes ficaria difícil de revisar e esconderia
 - Interfaces representam dependências que a arquitetura poderá implementar com banco, storage ou fornecedor externo.
 - DTOs são contratos de fronteira e não substituem entidades de domínio.
 - `Proposto` significa que ainda não existe implementação confirmada.
-- `Pendente` significa que uma decisão externa ainda pode alterar a classe ou relação.
+- `Pendente` significa que uma decisão da equipe ainda pode alterar a classe ou relação.
 - Atributos como `id`, `versao`, `criadoEm` e `atualizadoEm` são conceituais; tipo e estratégia definitivos pertencem à arquitetura e ao banco.
 - Senhas, tokens e segredos nunca aparecem em DTOs de saída nem em logs.
+
+### 1.3 Glossário técnico
+
+| Termo | Significado neste documento |
+| --- | --- |
+| Classe de domínio | Representação de um conceito do negócio, como aluno, turma ou inscrição. |
+| Entidade | Classe com identidade própria e histórico, mesmo que alguns dados mudem. |
+| Objeto de valor | Conjunto de dados definido pelo conteúdo, como endereço ou período. |
+| Invariante | Regra que deve continuar verdadeira antes e depois de qualquer operação. |
+| Cardinalidade | Quantidade de relações permitidas, como um responsável ligado a vários alunos. |
+| DTO | Objeto usado para receber ou devolver dados pela API, sem expor diretamente as entidades internas. |
+| Interface ou porta | Contrato que permite trocar banco, armazenamento ou fornecedor sem mudar a regra de negócio. |
+| Adaptador | Implementação de uma interface para uma tecnologia específica, como MySQL ou serviço de e-mail. |
+| Idempotência | Garantia de que repetir o mesmo comando não duplica o resultado. |
+| Outbox | Registro de um evento na mesma transação do dado principal, para que uma notificação possa ser enviada depois sem ser perdida. |
+| Operação compensatória | Nova ação que corrige os efeitos de uma operação concluída sem apagar o histórico. |
+| Concorrência | Situação em que duas requisições tentam alterar o mesmo dado ao mesmo tempo. |
 
 ## 2. Visão modular
 
@@ -96,39 +116,52 @@ flowchart LR
 classDiagram
     direction LR
 
-    class Usuario {
+    class Pessoa {
         +UUID id
         +String cpfNormalizado
         +String nome
+        +LocalDate dataNascimentoOpcional
         +String emailNormalizado
-        +String telefone
+        +String whatsapp
+        +LocalDateTime emailConfirmadoEm
+        +alterarContatoConfirmado()
+    }
+
+    class Usuario {
+        +UUID id
         +StatusUsuario status
         +DateTime criadoEm
-        +alterarDadosPermitidos()
         +inativar()
     }
 
+    class StatusUsuario {
+        <<enumeration>>
+        PENDENTE_CONFIRMACAO
+        ATIVO
+        INATIVO
+    }
+
     class Aluno {
-        +LocalDate dataNascimento
+        +UUID id
         +calcularIdade(dataReferencia)
         +ehMenorNaData(dataReferencia)
     }
 
     class Professor {
-        +String registro
-        +String especialidade
+        +UUID id
+        +String fotoOpcional
+        +String apresentacaoOpcional
+        +String formacaoOpcional
     }
 
     class Administrador {
+        +UUID id
         +NivelAdministrativo nivel
     }
 
     class ResponsavelLegal {
         +UUID id
-        +String nome
-        +String cpfNormalizado
-        +String email
-        +String telefone
+        +StatusCadastro status
     }
 
     class VinculoResponsavel {
@@ -140,13 +173,45 @@ classDiagram
         +estaVigente(em)
     }
 
+    class FichaSaude {
+        +UUID id
+        +String alergias
+        +String restricoesAtividadeFisica
+        +String medicamentos
+        +String deficienciasOuAdaptacoes
+        +String contatoEmergencia
+        +String observacoesMedicas
+        +String tipoSanguineoOpcional
+        +int versao
+        +atualizar(dados, autor)
+    }
+
+    class RevisaoFichaSaude {
+        +UUID id
+        +int versao
+        +String valoresAnterioresProtegidos
+        +Set~String~ camposAlterados
+        +UUID alteradaPor
+        +LocalDateTime alteradaEm
+    }
+
     class Credencial {
         +UUID id
         -String hashSenha
         +DateTime senhaAlteradaEm
         +StatusCredencial status
         +registrarNovoHash()
-        +bloquear()
+        +inativar()
+    }
+
+    class ControleTentativasLogin {
+        +UUID id
+        +String hashChaveControle
+        +int falhasConsecutivas
+        +LocalDateTime tentarNovamenteEm
+        +registrarFalha(instante)
+        +registrarSucesso()
+        +podeTentar(instante)
     }
 
     class Sessao {
@@ -210,8 +275,15 @@ classDiagram
     class RepositorioUsuario {
         <<interface>>
         +buscarPorId(id)
-        +buscarPorCpfNormalizado(cpf)
+        +buscarPorPessoaId(pessoaId)
         +salvar(usuario)
+    }
+
+    class RepositorioPessoa {
+        <<interface>>
+        +buscarPorId(id)
+        +buscarPorCpfNormalizado(cpf)
+        +salvar(pessoa)
     }
 
     class ArmazenamentoSessao {
@@ -221,11 +293,16 @@ classDiagram
         +revogar(id, motivo)
     }
 
-    Usuario <|-- Aluno
-    Usuario <|-- Professor
-    Usuario <|-- Administrador
+    Pessoa "1" --> "0..1" Usuario : pode possuir conta
+    Pessoa "1" --> "0..1" Aluno : pode ter perfil
+    Pessoa "1" --> "0..1" Professor : pode ter perfil
+    Pessoa "1" --> "0..1" Administrador : pode ter perfil
+    Pessoa "1" --> "0..1" ResponsavelLegal : pode ter perfil
+    Usuario --> StatusUsuario
     Aluno "1" --> "0..*" VinculoResponsavel : possui
     ResponsavelLegal "1" --> "0..*" VinculoResponsavel : participa
+    Aluno "1" *-- "0..1" FichaSaude : possui
+    FichaSaude "1" *-- "0..*" RevisaoFichaSaude : preserva
     Usuario "1" *-- "1" Credencial : protege
     Usuario "1" --> "0..*" Sessao : inicia
     Usuario "1" --> "0..*" TokenRecuperacao : recebe
@@ -234,7 +311,9 @@ classDiagram
     Papel "1" --> "0..*" PapelPermissao
     Permissao "1" --> "0..*" PapelPermissao
     ServicoAutenticacao ..> RepositorioUsuario
+    ServicoAutenticacao ..> RepositorioPessoa
     ServicoAutenticacao ..> ArmazenamentoSessao
+    ServicoAutenticacao ..> ControleTentativasLogin
     ServicoAutorizacao ..> AtribuicaoPapel
     ServicoAutorizacao ..> PapelPermissao
 ```
@@ -243,10 +322,13 @@ classDiagram
 
 | Elemento | Responsabilidade |
 | --- | --- |
-| `Usuario` | Identidade comum e estado da conta. CPF único e normalizado. Não armazena senha em claro. |
-| `Aluno`, `Professor`, `Administrador` | Especializações com dados próprios. O papel efetivo continua explícito para permitir permissões granulares. |
-| `ResponsavelLegal`/`VinculoResponsavel` | Representar responsável e vigência sem presumir portal próprio. |
+| `Pessoa` | Cadastro único por CPF, com dados pessoais e contato confirmado compartilhados pelos perfis. |
+| `Usuario` | Conta opcional da pessoa, com estado e credencial. Uma pessoa responsável não recebe conta automaticamente. |
+| `Aluno`, `Professor`, `Administrador`, `ResponsavelLegal` | Perfis que uma mesma pessoa pode acumular sem duplicar CPF ou dados de contato. |
+| `ResponsavelLegal`/`VinculoResponsavel` | Representar o papel de responsável e seus vínculos com vários alunos. |
 | `Credencial` | Guardar somente hash e estado da credencial. O algoritmo e os parâmetros ficam em componente técnico protegido. |
+| `ControleTentativasLogin` | Aplicar a espera progressiva separadamente do estado da conta, inclusive sem revelar se o usuário existe. |
+| `FichaSaude`/`RevisaoFichaSaude` | Manter a ficha atual e versões anteriores protegidas. O log comum registra somente autor, instante e nomes dos campos alterados. |
 | `Sessao` | Ciclo de vida da sessão opaca, expiração, rotação e revogação. |
 | `TokenRecuperacao` | Token de uso único, curto e armazenado somente como hash. |
 | `Papel`/`Permissao` | RBAC granular para administrador parcial/total e demais perfis. |
@@ -254,17 +336,26 @@ classDiagram
 
 ### 3.3 Invariantes
 
-- `Usuario.cpfNormalizado` deve ser único.
+- `Pessoa.cpfNormalizado` deve ser único em todo o sistema.
+- uma pessoa pode possuir vários perfis, mas no máximo uma conta `Usuario` e uma `Credencial`.
+- perfis de aluno, professor e administrador exigem data de nascimento na pessoa; o perfil apenas de responsável não adiciona essa obrigatoriedade na primeira versão.
+- `StatusUsuario` possui somente `PENDENTE_CONFIRMACAO`, `ATIVO` e `INATIVO`; falhas de login não transformam a conta em `BLOQUEADO`.
+- a espera progressiva começa na terceira falha e fica em `ControleTentativasLogin`; login válido reinicia a contagem.
 - `Credencial.hashSenha` nunca pode ser devolvido por API ou serializado em log.
 - sessão inativa, expirada ou revogada não autoriza requisição.
 - usuário inativo não cria nova sessão.
 - papel não concede permissão fora de sua vigência.
 - administrador não pode elevar o próprio acesso.
-- vínculo de responsável deve ser comprovado e vigente antes de comunicação sobre menor.
+- o perfil de responsável não cria `Usuario`, `Credencial`, `Sessao` ou papel de acesso automaticamente.
+- um responsável pode participar de vários vínculos, mas cada comunicação exige vínculo vigente com o aluno correspondente.
+- o e-mail do responsável deve estar confirmado antes da criação da conta do menor.
+- depois da nova confirmação, alteração de e-mail ou WhatsApp da pessoa responsável vale para todos os seus vínculos e gera aviso aos alunos vinculados.
+- cada aluno possui no máximo uma ficha de saúde atual; versões anteriores ficam protegidas e só são acessíveis a administrador autorizado e Heitor Leite.
+- o registro comum de auditoria da ficha guarda autor, instante e campos alterados, sem copiar os valores médicos.
 
 ### 3.4 Rastreabilidade
 
-`RF-IDN-001` a `RF-IDN-004`; `RF-ADM-007`; `RN-016`, `RN-017`, `RN-022`; `UC-IDN-*`, `UC-ADM-12`; `SEG-IDN-*`, `SEG-SES-*`, `SEG-AUTZ-*`.
+`RF-IDN-001` a `RF-IDN-004`; `RF-ADM-005/007`; `RF-FRQ-005`; `RN-016`, `RN-017`, `RN-022`, `RN-029/031`; `UC-IDN-*`, `UC-ADM-12/14`, `UC-PRF-04`; `SEG-IDN-*`, `SEG-SES-*`, `SEG-AUTZ-*`.
 
 ## 4. Fluxo crítico 2 — estrutura esportiva e vínculos
 
@@ -303,7 +394,19 @@ classDiagram
         +StatusTurma status
         +int versao
         +possuiVaga(inscricoesAtivas)
+        +suspender(motivo)
+        +reativar(novoPeriodoOpcional)
+        +encerrar()
         +inativar()
+    }
+
+    class StatusTurma {
+        <<enumeration>>
+        PLANEJADA
+        ATIVA
+        SUSPENSA
+        ENCERRADA
+        INATIVA
     }
 
     class AgendaTurma {
@@ -323,12 +426,39 @@ classDiagram
         +LocalDateTime fim
         +StatusAula status
         +cancelar(motivo)
-        +alterarLocal(novoPolo)
+        +alterarLocal(novoLocal)
+        +reagendar(novoInicio, novoFim, motivo, autor)
+    }
+
+    class StatusAula {
+        <<enumeration>>
+        AGENDADA
+        REAGENDADA
+        REALIZADA
+        CANCELADA
+    }
+
+    class AlteracaoAula {
+        +UUID id
+        +TipoAlteracaoAula tipo
+        +String valorAnteriorProtegido
+        +String valorNovoProtegido
+        +String motivo
+        +UUID realizadaPor
+        +LocalDateTime realizadaEm
+    }
+
+    class LocalAula {
+        +UUID poloIdOpcional
+        +String nome
+        +String endereco
+        +String complemento
+        +TipoLocalAula tipo
+        +validar()
     }
 
     class Professor {
         +UUID id
-        +String registro
         +StatusUsuario status
     }
 
@@ -356,8 +486,12 @@ classDiagram
 
     Polo "1" --> "0..*" Turma : recebe
     Modalidade "1" --> "0..*" Turma : define
+    Turma --> StatusTurma
     Turma "1" *-- "1..*" AgendaTurma : organiza
     Turma "1" *-- "0..*" Aula : gera
+    Aula --> StatusAula
+    Aula "1" *-- "1" LocalAula : acontece em
+    Aula "1" *-- "0..*" AlteracaoAula : preserva mudanças
     Professor "1" --> "0..*" VinculoProfessorTurma
     Turma "1" --> "0..*" VinculoProfessorTurma
     ServicoTurma ..> Polo
@@ -371,9 +505,15 @@ classDiagram
 - polo, modalidade, professor e turma são inativados; referências históricas não são excluídas.
 - `idadeMinima` não pode ser maior que `idadeMaxima`.
 - `capacidadeMaxima` deve ser positiva.
-- reduzir capacidade abaixo de inscrições confirmadas exige decisão operacional explícita; nunca cancela alunos silenciosamente.
+- reduzir capacidade abaixo das inscrições confirmadas é bloqueado; nunca cancela alunos silenciosamente.
 - aula pertence a uma única turma.
+- cada ocorrência possui um `LocalAula`, que pode referenciar um polo cadastrado ou guardar nome, endereço e complemento de um local temporário.
+- alterar o local de uma ocorrência não muda o polo permanente da turma.
 - professor só atua em aula cuja turma possua vínculo vigente na data aplicável.
+- turma `SUSPENSA` preserva inscrições e fila, mas não aceita novas inscrições nem gera novas aulas ou faltas enquanto durar a suspensão.
+- suspender uma turma não amplia automaticamente sua data final; na reativação, o administrador decide o novo período e as novas ocorrências e notifica os alunos.
+- reagendamento preserva o mesmo identificador da aula e cria `AlteracaoAula` com valores anterior e novo, motivo, autor e instante.
+- aula fica `REAGENDADA` até acontecer e então passa a `REALIZADA`.
 - alterações de regra possuem vigência e não reescrevem histórico encerrado.
 
 ### 4.3 Rastreabilidade
@@ -405,11 +545,9 @@ classDiagram
     class Inscricao {
         +UUID id
         +StatusInscricao status
-        +LocalDateTime solicitadaEm
         +LocalDateTime confirmadaEm
         +LocalDateTime encerradaEm
         +OrigemInscricao origem
-        +confirmar()
         +cancelar(motivo)
     }
 
@@ -417,6 +555,8 @@ classDiagram
         +UUID id
         +long sequencia
         +LocalDateTime entrouEm
+        +Long ultimaPosicaoExibida
+        +LocalDateTime saiuEm
         +StatusEspera status
         +encerrar(motivo)
         +estaElegivel()
@@ -441,6 +581,50 @@ classDiagram
         +moverPara(novoStatus)
     }
 
+    class StatusCandidatura {
+        <<enumeration>>
+        INSCRITO
+        EM_ANALISE
+        APROVADO
+        REPROVADO
+        CANCELADO
+    }
+
+    class CriterioSelecao {
+        +UUID id
+        +UUID modalidadeId
+        +int idadeMinima
+        +int idadeMaxima
+        +int versao
+        +String descricao
+        +boolean obrigatorio
+        +StatusCadastro status
+    }
+
+    class AvaliacaoCriterio {
+        +UUID id
+        +ResultadoAvaliacaoCriterio resultado
+        +String observacao
+        +UUID avaliadaPor
+        +LocalDateTime avaliadaEm
+    }
+
+    class ResultadoAvaliacaoCriterio {
+        <<enumeration>>
+        ATENDEU
+        NAO_ATENDEU
+    }
+
+    class CorrecaoResultadoSelecao {
+        +UUID id
+        +StatusCandidatura resultadoAnterior
+        +StatusCandidatura resultadoNovo
+        +String justificativa
+        +UUID realizadaPor
+        +LocalDateTime realizadaEm
+        +TipoCompensacao compensacao
+    }
+
     class TransicaoCandidatura {
         +UUID id
         +StatusCandidatura anterior
@@ -455,8 +639,7 @@ classDiagram
         +TipoExcecaoInscricao tipo
         +String regraExcepcionada
         +String justificativa
-        +UUID solicitadaPor
-        +UUID aprovadaPor
+        +UUID executadaPor
         +LocalDateTime criadaEm
     }
 
@@ -471,9 +654,7 @@ classDiagram
 
     class StatusInscricao {
         <<enumeration>>
-        SOLICITADA
         CONFIRMADA
-        EM_SELECAO
         CANCELADA
         ENCERRADA
     }
@@ -505,7 +686,13 @@ classDiagram
     OfertaVaga "0..1" --> "0..1" Inscricao : converte em
     Aluno "1" --> "0..*" CandidaturaSelecao : apresenta
     Turma "1" --> "0..*" CandidaturaSelecao : avalia
+    Turma "1" --> "1..*" CriterioSelecao : aplica versão
     CandidaturaSelecao "1" *-- "0..*" TransicaoCandidatura : registra
+    CandidaturaSelecao "1" *-- "1..*" AvaliacaoCriterio : avalia por
+    CriterioSelecao "1" --> "0..*" AvaliacaoCriterio : orienta
+    AvaliacaoCriterio --> ResultadoAvaliacaoCriterio
+    CandidaturaSelecao "1" --> "0..*" CorrecaoResultadoSelecao : pode corrigir
+    CandidaturaSelecao --> StatusCandidatura
     Inscricao "1" *-- "1..*" HistoricoInscricao : preserva
     Inscricao "1" --> "0..*" ExcecaoInscricao : pode receber
     Inscricao --> StatusInscricao
@@ -555,7 +742,9 @@ classDiagram
 
     class ServicoProcessoSeletivo {
         +criarCandidatura(alunoId, turmaId)
+        +avaliar(candidaturaId, avaliacoes, autor)
         +transicionar(candidaturaId, estado, autor, justificativa)
+        +corrigirErro(candidaturaId, novoResultado, motivo, adminTotal)
     }
 
     class ServicoExcecaoInscricao {
@@ -602,24 +791,30 @@ classDiagram
 | Elemento | Responsabilidade |
 | --- | --- |
 | `Inscricao` | Vínculo confirmado ou encerrado entre aluno e turma; não carrega posição de espera. |
-| `EntradaListaEspera` | Ordem de chegada própria da turma e estado na fila. |
+| `EntradaListaEspera` | Ordem de chegada própria da turma, posição ativa e última posição/instante após a saída. |
 | `OfertaVaga` | Reserva temporária, prazo e resposta do aluno. Uma vaga não pode possuir duas ofertas ativas. |
-| `CandidaturaSelecao` | Fluxo separado para turmas seletivas; estados ainda dependem de `Q-012`. |
-| `ExcecaoInscricao` | Registro explícito da regra ignorada, justificativa e aprovadores. Não altera silenciosamente a regra global. |
-| `PoliticaElegibilidade` | Reúne limite, idade, capacidade, duplicidade, status e futuras regras de conflito de horário. |
+| `CandidaturaSelecao` | Fluxo separado com `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO` e `CANCELADO`. |
+| `CriterioSelecao`/`AvaliacaoCriterio` | Versionar critérios em texto por modalidade e idade e registrar `ATENDEU` ou `NAO_ATENDEU`, sem pontuação automática. |
+| `CorrecaoResultadoSelecao` | Corrigir erro administrativo e registrar eventual compensação após a matrícula, sem alterar ordem ou critérios. |
+| `ExcecaoInscricao` | Registro explícito da regra ignorada, justificativa e administrador total executor. Não altera silenciosamente a regra global. |
+| `PoliticaElegibilidade` | Reúne limite de duas modalidades distintas, idade, capacidade, duplicidade, status e aviso de conflito de horário. |
 | `ServicoListaEspera` | Coordena concorrência, ordem, oferta, expiração e idempotência. |
 
 ### 5.4 Invariantes transacionais
 
+- cada critério seletivo informa se é obrigatório ou opcional, mas nenhum resultado aprova ou reprova automaticamente; professor ou administrador responsável registra a decisão humana final.
+
 - aluno não mantém duas inscrições ativas na mesma turma.
-- o limite de duas modalidades/inscrições simultâneas depende da definição de `Q-002`.
+- solicitação termina diretamente em inscrição `CONFIRMADA`, entrada na fila, candidatura seletiva ou rejeição; `SOLICITADA` não é persistido.
+- aluno mantém no máximo duas modalidades distintas considerando inscrições confirmadas e candidaturas em andamento; fila não conta.
+- duas turmas ativas da mesma modalidade são proibidas; conflito de horário gera aviso e confirmação, mas não bloqueio.
 - capacidade não é excedida por corrida entre requisições comuns.
 - `(turma, aluno)` possui no máximo uma entrada ativa na fila.
-- `sequencia` é única e crescente dentro da turma; a posição exibida pode ser calculada.
+- `sequencia` é única e crescente dentro da turma; após a saída, guardam-se última posição e instante sem novo cálculo ativo.
 - cada vaga liberada mantém no máximo uma `OfertaVaga` ativa.
 - confirmar/recusar/expirar oferta é idempotente.
-- inscrição, histórico, encerramento da fila e evento de notificação devem ser persistidos atomicamente ou por padrão outbox confiável.
-- exceção administrativa exige permissão, justificativa e aprovação definidas; a classe não autoriza o ator por si só.
+- inscrição, histórico, encerramento da fila e evento de notificação devem ser gravados juntos ou com outbox confiável.
+- exceção administrativa exige administrador total e justificativa, sem segunda aprovação; nunca altera fila ou critérios seletivos.
 
 ### 5.5 Rastreabilidade
 
@@ -688,8 +883,10 @@ classDiagram
         +String descricao
         +LocalDateTime enviadaEm
         +LocalDateTime decididaEm
-        +enviar(comprovante)
+        +enviar(comprovantes)
         +decidir(decisao)
+        +recorrer(motivo)
+        +cancelarAntesDaDecisao()
     }
 
     class ArquivoComprovante {
@@ -706,6 +903,7 @@ classDiagram
 
     class DecisaoJustificativa {
         +UUID id
+        +TipoDecisaoJustificativa tipo
         +ResultadoDecisao resultado
         +String motivo
         +UUID decididaPor
@@ -716,15 +914,16 @@ classDiagram
         <<enumeration>>
         PRESENTE
         AUSENTE
-        DISPENSADO
     }
 
     class StatusJustificativa {
         <<enumeration>>
-        EM_RASCUNHO
         EM_ANALISE
         ACEITA
         RECUSADA
+        EM_RECURSO
+        ACEITA_EM_RECURSO
+        RECUSADA_FINAL
         CANCELADA
     }
 
@@ -734,9 +933,9 @@ classDiagram
     Chamada "1" *-- "1..*" RegistroFrequencia : contém
     Inscricao "1" --> "0..*" RegistroFrequencia : recebe
     RegistroFrequencia "1" --> "0..*" CorrecaoFrequencia : preserva
-    RegistroFrequencia "1" --> "0..1" JustificativaFalta : pode justificar
-    JustificativaFalta "1" *-- "1" ArquivoComprovante : exige
-    JustificativaFalta "1" --> "0..1" DecisaoJustificativa : recebe
+    JustificativaFalta "0..1" --> "1..*" RegistroFrequencia : abrange
+    JustificativaFalta "1" *-- "0..3" ArquivoComprovante : pode anexar
+    JustificativaFalta "1" --> "0..2" DecisaoJustificativa : recebe
     RegistroFrequencia --> StatusFrequencia
     JustificativaFalta --> StatusJustificativa
 ```
@@ -762,8 +961,10 @@ classDiagram
     }
 
     class ServicoJustificativa {
-        +enviar(alunoId, registroId, arquivo)
+        +enviar(alunoId, registroIds, descricao, arquivos)
         +decidir(administradorId, justificativaId, decisao)
+        +recorrer(alunoId, justificativaId, motivo)
+        +cancelarAntesDaDecisao(alunoId, justificativaId)
     }
 
     class PoliticaFaltas {
@@ -847,8 +1048,15 @@ classDiagram
 - cada inscrição elegível possui no máximo um registro por chamada.
 - diário sem conteúdo válido impede o salvamento completo.
 - correção exige administrador autorizado e justificativa; valor anterior permanece rastreável.
-- justificativa só pode apontar para registro `AUSENTE` e elegível conforme regra aprovada.
-- justificativa em análise exige um comprovante aprovado pela varredura.
+- uma justificativa abrange uma ou várias ausências do mesmo aluno, inclusive de modalidades diferentes, quando estiverem cobertas pelo mesmo motivo ou comprovante.
+- cada ausência selecionada deve estar dentro do próprio prazo de 7 dias e pode participar de no máximo uma justificativa ativa.
+- justificativa exige descrição, mas pode ser enviada sem comprovante ou com até três arquivos.
+- todo comprovante anexado precisa ser aprovado pela varredura antes de ficar disponível para análise.
+- aluno cancela a justificativa somente em `EM_ANALISE` e antes da primeira decisão; o sistema avisa que as ausências voltarão a contar e recalcula eventual cancelamento da inscrição.
+- recusa inicial pode passar uma única vez para `EM_RECURSO`; outro administrador decide `ACEITA_EM_RECURSO` ou `RECUSADA_FINAL`.
+- a justificativa guarda no máximo duas decisões: inicial e recurso.
+- frequência possui somente `PRESENTE` ou `AUSENTE`; justificativa aceita permanece vinculada à ausência, mas faz com que ela não conte no limite.
+- aula cancelada não possui chamada nem registros de frequência.
 - professor não acessa comprovante nem decisão administrativa.
 - efeitos de alerta/cancelamento decorrentes de correção devem ser compensados de forma idempotente.
 
@@ -856,7 +1064,7 @@ classDiagram
 
 `RF-FRQ-001` a `RF-FRQ-006`; `RF-JUS-001` a `RF-JUS-003`; `RN-002` a `RN-007`, `RN-013`, `RN-014`, `RN-019`, `RN-024`, `RN-025`; `UC-FRQ-01`, `UC-PRF-02/03/04`, `UC-JUS-*`, `UC-ADM-09/10`, `UC-AUT-02/03/04`; `SEG-ARQ-*`, `SEG-AUTZ-006/007`.
 
-## 7. Fluxo crítico 5 — notificações e WhatsApp
+## 7. Fluxo crítico 5 — notificações internas, e-mail e WhatsApp futuro
 
 ### 7.1 Diagrama
 
@@ -891,6 +1099,8 @@ classDiagram
         +String mensagemMinimizada
         +LocalDateTime criadaEm
         +StatusNotificacao status
+        +marcarComoLida()
+        +apagarParaUsuario()
     }
 
     class DestinatarioNotificacao {
@@ -943,6 +1153,11 @@ classDiagram
         +consultar(idProvedor) ResultadoEntrega
     }
 
+    class EmailAdapter {
+        +enviar(requisicao) ResultadoEnvio
+        +consultar(idProvedor) ResultadoEntrega
+    }
+
     class WhatsAppAdapter {
         +enviar(requisicao) ResultadoEnvio
         +validarWebhook(headers, corpo)
@@ -967,18 +1182,20 @@ classDiagram
     ServicoNotificacao ..> ProvedorMensagem
     ServicoNotificacao ..> RepositorioNotificacao
     ProvedorMensagem <|.. WhatsAppAdapter
+    ProvedorMensagem <|.. EmailAdapter
 ```
 
 ### 7.2 Eventos iniciais
 
 | Evento | Origem | Destinatários propostos |
 | --- | --- | --- |
-| `VAGA_OFERECIDA` | `OfertaVaga` | Aluno elegível |
+| `INSCRICAO_CONFIRMADA_OU_CANCELADA` | `Inscricao` | Aluno e responsável quando menor |
+| `VAGA_OFERECIDA` | `OfertaVaga` | Aluno e responsável quando menor |
+| `RESULTADO_PROCESSO_SELETIVO` | `CandidaturaSelecao` | Aluno e responsável quando menor |
 | `LIMITE_FALTAS_ATINGIDO` | `PoliticaFaltas` | Aluno e responsável vigente quando menor |
 | `INSCRICAO_CANCELADA_POR_FALTAS` | `Inscricao` | Aluno e responsável quando aplicável |
-| `JUSTIFICATIVA_DECIDIDA` | `DecisaoJustificativa` | Aluno |
-| `AULA_CANCELADA` | `Aula` | Alunos com inscrição ativa na turma |
-| `LOCAL_AULA_ALTERADO` | `Aula` | Alunos com inscrição ativa na turma |
+| `JUSTIFICATIVA_DECIDIDA` | `DecisaoJustificativa` | Aluno e responsável quando menor |
+| `AULA_CANCELADA_OU_ALTERADA` | `Aula` | Alunos ativos e responsáveis dos menores |
 
 ### 7.3 Invariantes
 
@@ -988,15 +1205,16 @@ classDiagram
 - uma chave de idempotência identifica evento, destinatário, canal e template.
 - callback repetido do fornecedor não duplica estado ou mensagem.
 - “aceito pelo provedor” e “entregue ao destinatário” são estados distintos.
-- retentativas têm limite, backoff e falha final visível.
+- e-mail possui no máximo três tentativas: imediata, após 5 minutos e após 30 minutos; falha final cria pendência administrativa sem desfazer a operação principal.
+- notificação interna é obrigatória para o aluno; o usuário pode marcá-la como lida ou apagá-la sem eliminar o registro técnico mínimo durante a retenção.
 - telefone completo e conteúdo não aparecem em log comum.
-- `WhatsAppAdapter` depende de fornecedor ainda não aprovado; `ProvedorMensagem` permite substituição e testes.
+- `EmailAdapter` é o canal externo da primeira versão. `WhatsAppAdapter` permanece futuro e depende de fornecedor ainda não aprovado.
 
 ### 7.4 Rastreabilidade
 
-`RF-COM-001` a `RF-COM-004`; `RF-INS-004`; `RF-JUS-003`; `RN-006`, `RN-007`, `RN-010`, `RN-011`, `RN-020`, `RN-025`; `UC-COM-*`, `UC-AUT-01/02/04`; `SEG-WA-*`, `SEG-INT-*`, `SEG-LOG-*`.
+`RF-COM-001` a `RF-COM-006`; `RF-INS-004`; `RF-JUS-003`; `RN-006`, `RN-007`, `RN-010`, `RN-011`, `RN-020`, `RN-025`; `UC-COM-*`, `UC-AUT-01/02/03/04`; `SEG-WA-*`, `SEG-INT-*`, `SEG-LOG-*`.
 
-## 8. Fluxo crítico 6 — relatórios, exportações e mapas de calor
+## 8. Fluxo crítico futuro 6 — relatórios, exportações e mapas de calor
 
 ### 8.1 Diagrama
 
@@ -1213,7 +1431,7 @@ classDiagram
 - serviço de aplicação coordena transação, autorização contextual e eventos.
 - modelo de domínio protege invariantes mesmo quando chamado por job ou integração.
 - repositórios e fornecedores são interfaces voltadas para o domínio/aplicação.
-- adaptadores dependem das interfaces; o domínio não depende de Spring, JPA ou SDK de WhatsApp.
+- adaptadores dependem das interfaces; o domínio não depende de Spring, JPA ou SDK de fornecedor externo.
 - entidade persistida não deve ser serializada diretamente como resposta da API.
 - DTO de entrada não possui `papel`, `dono`, `status interno`, `criadoPor` ou campos controlados pelo servidor sem caso explícito.
 
@@ -1221,13 +1439,13 @@ classDiagram
 
 | Módulo | Entidades/objetos de valor | Serviços | Interfaces/adaptadores |
 | --- | --- | --- | --- |
-| Identidade | `Usuario`, `Aluno`, `Professor`, `Administrador`, `ResponsavelLegal`, `VinculoResponsavel`, `Credencial`, `Sessao`, `TokenRecuperacao`, `Papel`, `Permissao` | `ServicoAutenticacao`, `ServicoAutorizacao` | `RepositorioUsuario`, `ArmazenamentoSessao` |
-| Atividades | `Polo`, `Modalidade`, `Turma`, `AgendaTurma`, `Aula`, `VinculoProfessorTurma` | `ServicoTurma`, `ServicoVinculoProfessor` | Repositórios específicos a definir no banco/arquitetura |
-| Inscrições | `Inscricao`, `EntradaListaEspera`, `OfertaVaga`, `CandidaturaSelecao`, `TransicaoCandidatura`, `ExcecaoInscricao`, `HistoricoInscricao` | `ServicoInscricao`, `ServicoListaEspera`, `ServicoProcessoSeletivo`, `ServicoExcecaoInscricao`, `PoliticaElegibilidade` | `RepositorioInscricao`, `RepositorioListaEspera`, `PublicadorEvento` |
+| Identidade | `Pessoa`, `Usuario`, `Aluno`, `Professor`, `Administrador`, `ResponsavelLegal`, `VinculoResponsavel`, `FichaSaude`, `RevisaoFichaSaude`, `Credencial`, `ControleTentativasLogin`, `Sessao`, `TokenRecuperacao`, `Papel`, `Permissao` | `ServicoAutenticacao`, `ServicoAutorizacao` | `RepositorioPessoa`, `RepositorioUsuario`, `ArmazenamentoSessao` |
+| Atividades | `Polo`, `Modalidade`, `Turma`, `AgendaTurma`, `Aula`, `LocalAula`, `AlteracaoAula`, `VinculoProfessorTurma` | `ServicoTurma`, `ServicoVinculoProfessor` | Repositórios específicos a definir no banco/arquitetura |
+| Inscrições | `Inscricao`, `EntradaListaEspera`, `OfertaVaga`, `CandidaturaSelecao`, `CriterioSelecao`, `AvaliacaoCriterio`, `TransicaoCandidatura`, `CorrecaoResultadoSelecao`, `ExcecaoInscricao`, `HistoricoInscricao` | `ServicoInscricao`, `ServicoListaEspera`, `ServicoProcessoSeletivo`, `ServicoExcecaoInscricao`, `PoliticaElegibilidade` | `RepositorioInscricao`, `RepositorioListaEspera`, `PublicadorEvento` |
 | Frequência | `Chamada`, `DiarioAula`, `RegistroFrequencia`, `CorrecaoFrequencia` | `ServicoChamada`, `PoliticaFaltas` | `RepositorioChamada`, `PublicadorEvento` |
 | Justificativas | `JustificativaFalta`, `ArquivoComprovante`, `DecisaoJustificativa` | `ServicoJustificativa`, `ServicoArquivo` | `RepositorioJustificativa`, `ArmazenamentoArquivo`, `ScannerArquivo` |
-| Comunicação | `EventoDominio`, `ItemOutbox`, `Notificacao`, `DestinatarioNotificacao`, `TentativaEntrega`, `TemplateMensagem` | `ServicoNotificacao`, `PoliticaDestinatarios`, `PoliticaRetentativa` | `ProvedorMensagem`, `WhatsAppAdapter`, `RepositorioNotificacao` |
-| Relatórios | `SolicitacaoRelatorio`, `FiltroRelatorio`, `DefinicaoIndicador`, `ResultadoRelatorio`, `ConjuntoAgregado`, `ExportacaoRelatorio`, `ArquivoExportado` | `ServicoRelatorio`, `ServicoExportacao`, `PoliticaAgregacao` | `ConsultaAnalitica`, `GeradorArquivoRelatorio`, `GeradorPdf`, `GeradorExcel` |
+| Comunicação | `EventoDominio`, `ItemOutbox`, `Notificacao`, `DestinatarioNotificacao`, `TentativaEntrega`, `TemplateMensagem` | `ServicoNotificacao`, `PoliticaDestinatarios`, `PoliticaRetentativa` | `ProvedorMensagem`, `EmailAdapter`, futuro `WhatsAppAdapter`, `RepositorioNotificacao` |
+| Relatórios futuros | `SolicitacaoRelatorio`, `FiltroRelatorio`, `DefinicaoIndicador`, `ResultadoRelatorio`, `ConjuntoAgregado`, `ExportacaoRelatorio`, `ArquivoExportado` | `ServicoRelatorio`, `ServicoExportacao`, `PoliticaAgregacao` | `ConsultaAnalitica`, `GeradorArquivoRelatorio`, `GeradorPdf`, `GeradorExcel` |
 
 ## 11. Estados principais
 
@@ -1235,19 +1453,19 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 
 | Conceito | Estados propostos | Pendência |
 | --- | --- | --- |
-| Usuário | `PENDENTE`, `ATIVO`, `BLOQUEADO`, `INATIVO` | Fluxo de ativação/verificação ainda não definido |
-| Turma | `PLANEJADA`, `ATIVA`, `SUSPENSA`, `ENCERRADA`, `INATIVA` | Transições e vigência pendentes |
-| Aula | `AGENDADA`, `REALIZADA`, `CANCELADA`, `REAGENDADA` | Efeito de reagendamento na chamada pendente |
-| Inscrição | `SOLICITADA`, `CONFIRMADA`, `EM_SELECAO`, `CANCELADA`, `ENCERRADA` | Conceito de simultaneidade em `Q-002` |
-| Lista de espera | `AGUARDANDO`, `COM_OFERTA`, `CONVERTIDA`, `DESISTENTE`, `INELEGIVEL`, `ENCERRADA` | Reentrada e perda de posição em `Q-021` |
-| Oferta | `ATIVA`, `CONFIRMADA`, `RECUSADA`, `EXPIRADA`, `CANCELADA` | Prazo em `Q-003` |
-| Candidatura | `INSCRITA`, `EM_ANALISE`, `PENDENTE`, `APROVADA`, `RECUSADA`, `CANCELADA` | Estados reais em `Q-012` |
-| Chamada | `ABERTA`, `SALVA`, `CORRIGIDA` | Janela operacional e conectividade em `Q-018` |
-| Frequência | `PRESENTE`, `AUSENTE`, `DISPENSADO` | Estado adicional só após validação do negócio |
-| Justificativa | `EM_RASCUNHO`, `EM_ANALISE`, `ACEITA`, `RECUSADA`, `CANCELADA` | Reanálise/recurso pendentes |
-| Arquivo | `EM_QUARENTENA`, `APROVADO`, `REJEITADO`, `EXPIRADO`, `EXCLUIDO` | Scanner e retenção pendentes |
-| Entrega | `PENDENTE`, `ENVIADA_AO_PROVEDOR`, `ENTREGUE`, `FALHA_TEMPORARIA`, `FALHA_FINAL` | Estados do fornecedor pendentes |
-| Exportação | `SOLICITADA`, `PROCESSANDO`, `DISPONIVEL`, `FALHA`, `EXPIRADA`, `EXCLUIDA` | Prazo/volume pendentes |
+| Usuário | `PENDENTE_CONFIRMACAO`, `ATIVO`, `INATIVO` | Espera progressiva de login fica em `ControleTentativasLogin`, sem estado `BLOQUEADO` |
+| Turma | `PLANEJADA`, `ATIVA`, `SUSPENSA`, `ENCERRADA`, `INATIVA` | Suspensão preserva inscrições e fila, mas interrompe novas aulas, inscrições e faltas |
+| Aula | `AGENDADA`, `REAGENDADA`, `REALIZADA`, `CANCELADA` | Reagendamento preserva a aula e seu histórico; aula cancelada não possui chamada |
+| Inscrição | `CONFIRMADA`, `CANCELADA`, `ENCERRADA` | Pedido não persiste `SOLICITADA`; fila e seleção possuem modelos próprios |
+| Lista de espera | `AGUARDANDO`, `COM_OFERTA`, `CONVERTIDA`, `DESISTENTE`, `INELEGIVEL`, `ENCERRADA` | Saída preserva última posição e instante; retorno entra no final |
+| Oferta | `ATIVA`, `CONFIRMADA`, `RECUSADA`, `EXPIRADA`, `CANCELADA` | `ATIVA` dura 48 horas corridas |
+| Candidatura | `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO`, `CANCELADO` | Não há recurso do aluno na primeira versão; erro administrativo é corrigido separadamente |
+| Chamada | `ABERTA`, `SALVA`, `CORRIGIDA` | Professor salva em até 24 horas; rascunho local não é `SALVA` antes da confirmação do servidor |
+| Frequência | `PRESENTE`, `AUSENTE` | Justificativa aceita não muda o estado, mas desconsidera a ausência no limite |
+| Justificativa | `EM_ANALISE`, `ACEITA`, `RECUSADA`, `EM_RECURSO`, `ACEITA_EM_RECURSO`, `RECUSADA_FINAL`, `CANCELADA` | Cancelamento pelo aluno somente antes da primeira decisão |
+| Arquivo | `EM_QUARENTENA`, `APROVADO`, `REJEITADO`, `EXPIRADO`, `EXCLUIDO` | Até 3 arquivos opcionais; retenção conforme levantamento |
+| Entrega | `PENDENTE`, `ENVIADA_AO_PROVEDOR`, `ENTREGUE`, `FALHA_TEMPORARIA`, `FALHA_FINAL` | E-mail na primeira versão; WhatsApp somente no futuro |
+| Exportação futura | `SOLICITADA`, `PROCESSANDO`, `DISPONIVEL`, `FALHA`, `EXPIRADA`, `EXCLUIDA` | Só será refinada quando a Secretaria definir relatórios e exportações |
 
 ## 12. Regras transversais de modelagem
 
@@ -1278,7 +1496,7 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 - CPF e e-mail são normalizados para unicidade, mas a exibição deve ser minimizada/mascarada conforme contexto.
 - hash de senha, hash de token, chave de storage e identificador interno do fornecedor são restritos.
 - arquivos ficam fora do banco principal quando a arquitetura assim definir, mas seus metadados e autorização permanecem no domínio.
-- dado de saúde não foi modelado como atributo genérico de aluno porque finalidade, campos e acessos ainda não foram aprovados.
+- dados de saúde ficam em `FichaSaude`, separados dos dados gerais do aluno, com versões anteriores protegidas, acesso restrito e auditoria minimizada.
 - localização individual de aluno não faz parte do modelo analítico.
 
 ## 13. Ajustes em relação ao Documento de Visão
@@ -1286,49 +1504,66 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 | Modelo original | Refinamento proposto | Motivo |
 | --- | --- | --- |
 | `Usuario.senha` | `Credencial.hashSenha` separado | Impedir senha em entidade/DTO/log e controlar ciclo de vida. |
-| `Aluno.responsavel: String` | `ResponsavelLegal` + `VinculoResponsavel` | Validar identidade, contato, vigência e relação com o menor. |
+| Dados pessoais repetidos por papel | `Pessoa` única por CPF + perfis e `Usuario` opcional | Evitar duplicidade quando a mesma pessoa for responsável, aluno, professor ou administrador. |
+| `Aluno.responsavel: String` | Perfil `ResponsavelLegal` + `VinculoResponsavel` | Permitir vários menores e contato compartilhado confirmado, sem criar conta automaticamente. |
 | `Aluno.modalidade[]: Inscricao` | `Aluno → Inscricao → Turma → Modalidade` | Representar o vínculo correto e preservar histórico. |
 | `Professor.turmas[]` | `VinculoProfessorTurma` com vigência | Autorizar chamada por turma e data, inclusive substituição futura. |
+| Local fixo diretamente na turma | `Aula` + `LocalAula` | Permitir que uma ocorrência use polo cadastrado ou local temporário sem alterar o polo permanente da turma. |
 | `Inscricao.posicaoEspera` | `EntradaListaEspera.sequencia` | Separar inscrição confirmada de fila e suportar concorrência. |
 | Ausência de oferta | `OfertaVaga` | Representar prazo, reserva, confirmação, recusa e expiração. |
 | `Presenca.presente: boolean` | `RegistroFrequencia.status` | Evitar booleano ambíguo e permitir estados explícitos. |
 | Alteração direta de chamada | `CorrecaoFrequencia` | Preservar antes/depois, justificativa e autor administrativo. |
 | `Justificativa.documento: String` | `ArquivoComprovante` | Controlar storage privado, varredura, integridade e retenção. |
 | `Notificacao.destinatario: String` | `DestinatarioNotificacao` + `TentativaEntrega` | Suportar múltiplos canais, mascaramento, estados e retentativas. |
-| Relação direta com WhatsApp | `ProvedorMensagem` + `WhatsAppAdapter` | Isolar fornecedor e facilitar testes/substituição. |
+| Relação direta com WhatsApp | `ProvedorMensagem` + `EmailAdapter` atual + `WhatsAppAdapter` futuro | Usar e-mail na primeira versão e isolar o futuro fornecedor de WhatsApp. |
 | Relatório implícito | Modelo analítico e exportação explícitos | Proteger campos, agregação, formula injection e expiração. |
 
 ## 14. Rastreabilidade consolidada
 
 | Fluxo | Requisitos | Regras | Casos de uso | Segurança |
 | --- | --- | --- | --- | --- |
-| Identidade e acesso | `RF-IDN-*`, `RF-ADM-007` | `RN-016/017/022` | `UC-IDN-*`, `UC-ADM-12` | `SEG-IDN-*`, `SEG-SES-*`, `SEG-AUTZ-*` |
+| Identidade e acesso | `RF-IDN-*`, `RF-ADM-005/007`, `RF-FRQ-005` | `RN-016/017/022/029/031` | `UC-IDN-*`, `UC-ADM-12/14`, `UC-PRF-04` | `SEG-IDN-*`, `SEG-SES-*`, `SEG-AUTZ-*` |
 | Estrutura esportiva | `RF-ADM-001` a `RF-ADM-004`, `RF-FRQ-002` | `RN-002/008/012/013/015/018` | `UC-ADM-01` a `UC-ADM-05`, `UC-PRF-01` | `SEG-AUTZ-003`, `SEG-DB-*` |
 | Inscrição e espera | `RF-INS-*` | `RN-001`, `RN-008` a `RN-012`, `RN-018/023` | `UC-INS-*`, `UC-ADM-07/08/13`, `UC-AUT-01` | `SEG-API-008`, `SEG-RES-002`, `SEG-AUTZ-*` |
 | Frequência e justificativa | `RF-FRQ-*`, `RF-JUS-*` | `RN-002` a `RN-007`, `RN-013/014/019/024/025` | `UC-FRQ-01`, `UC-PRF-*`, `UC-JUS-*`, `UC-ADM-09/10`, `UC-AUT-02/03/04` | `SEG-ARQ-*`, `SEG-AUTZ-006/007`, `SEG-LOG-*` |
 | Notificações | `RF-COM-*`, `RF-INS-004`, `RF-JUS-003` | `RN-006/007/010/011/020/025` | `UC-COM-*`, `UC-AUT-01/02/04` | `SEG-WA-*`, `SEG-INT-*` |
-| Relatórios | `RF-REL-*` | Regras de dados aplicáveis | `UC-REL-*` | `SEG-EXP-*`, `SEG-MAP-*`, `SEG-PRI-*` |
+| Relatórios futuros | `RF-REL-*` | Regras de dados aplicáveis | `UC-REL-*` | `SEG-EXP-*`, `SEG-MAP-*`, `SEG-PRI-*` |
 
-## 15. Pendências que podem alterar o modelo
+## 15. Decisões incorporadas e questões específicas restantes
 
-| ID | Decisão pendente | Classes afetadas |
-| --- | --- | --- |
-| `Q-001` | Compatibilizar limite por modalidade, terceira falta justificável e alerta na segunda | `Modalidade`, `PoliticaFaltas`, `ResultadoApuracaoFaltas`, `JustificativaFalta` |
-| `Q-002` | Definir “duas modalidades” e simultaneidade/conflito de horário | `Inscricao`, `PoliticaElegibilidade`, `AgendaTurma` |
-| `Q-003` | Prazo e canal alternativo da oferta | `OfertaVaga`, `ServicoListaEspera`, `Notificacao` |
-| `Q-004` | Data de referência da idade | `Aluno`, `PoliticaElegibilidade`, `Relogio` |
-| `Q-005` | Contagem mensal, aula cancelada, correção e justificativa em análise | `PoliticaFaltas`, `CorrecaoFrequencia`, `JustificativaFalta` |
-| `Q-006` | Escopo, papel e segunda aprovação de exceção | `ExcecaoInscricao`, `ServicoExcecaoInscricao`, `Permissao` |
-| `Q-007/008` | Dados de saúde, menores e responsável legal | `Aluno`, futuro modelo de saúde, `ResponsavelLegal`, `VinculoResponsavel` |
-| `Q-009/017` | Fornecedor e obrigatoriedade do WhatsApp | `ProvedorMensagem`, `WhatsAppAdapter`, `TemplateMensagem` |
-| `Q-010/011` | Autenticação, sessão e matriz administrativa | `Credencial`, `Sessao`, `Papel`, `Permissao`, `AtribuicaoPapel` |
-| `Q-012` | Estados, critérios e documentos do processo seletivo | `CandidaturaSelecao`, `TransicaoCandidatura` |
-| `Q-013/014` | Fórmulas, campos e limiar dos relatórios/mapas | `DefinicaoIndicador`, `PoliticaAgregacao`, `FiltroRelatorio` |
-| `Q-015/016` | Retenção, volumes, arquivos, RPO/RTO | `ArquivoComprovante`, `ArquivoExportado`, repositórios e storage |
-| `Q-018` | Operação offline/parcial durante chamada | `Chamada`, DTOs de sincronização e controle de versão |
-| `Q-020` | Múltiplos professores e substituição temporária | `VinculoProfessorTurma` |
-| `Q-021` | Reentrada e posição na fila | `EntradaListaEspera`, `HistoricoInscricao` |
-| `Q-022` | Uso de QR Code na chamada | Futuro `TokenPresenca`/validador; não modelado sem requisito aprovado |
+As decisões transversais `Q-001` a `Q-023` já foram resolvidas no levantamento de requisitos e incorporadas ao modelo: e-mail no lugar de WhatsApp, relatórios e mapas como componentes futuros, processo seletivo com cinco estados, oferta de 48 horas, fila sem reordenação, chamada com rascunho local e regras de retenção aprovadas.
+
+Esta primeira rodada específica do modelo também foi aceita:
+
+| ID | Decisão incorporada | Classes afetadas | Situação |
+| --- | --- | --- | --- |
+| `Q-CLS-001` | Responsável mantém CPF, não possui conta e pode estar vinculado a vários alunos. | `ResponsavelLegal`, `VinculoResponsavel` | Aceita em 14/08/2026 |
+| `Q-CLS-002` | Justificativa exige descrição e aceita de zero a três comprovantes opcionais. | `JustificativaFalta`, `ArquivoComprovante` | Aceita em 14/08/2026 |
+| `Q-CLS-003` | Frequência usa apenas `PRESENTE` e `AUSENTE`; justificativa aceita desconsidera a ausência; aula cancelada não tem chamada. | `RegistroFrequencia`, `JustificativaFalta`, `Chamada` | Aceita em 14/08/2026 |
+| `Q-CLS-004` | Local de uma ocorrência pode ser polo cadastrado ou local temporário com nome, endereço e complemento. | `Aula`, `LocalAula`, `Polo` | Aceita em 14/08/2026 |
+| `Q-CLS-005` | Turma usa `PLANEJADA`, `ATIVA`, `SUSPENSA`, `ENCERRADA` e `INATIVA`; suspensão preserva vínculos e interrompe novas inscrições, aulas e faltas. | `Turma`, `StatusTurma` | Aceita em 14/08/2026 |
+
+A segunda rodada também foi incorporada:
+
+| ID | Decisão incorporada | Classes afetadas | Situação |
+| --- | --- | --- | --- |
+| `Q-CLS-006` | Conta usa `PENDENTE_CONFIRMACAO`, `ATIVO` e `INATIVO`; espera progressiva fica em controle separado, sem `BLOQUEADO`. | `Usuario`, `Credencial`, `ControleTentativasLogin` | Aceita em 14/08/2026 |
+| `Q-CLS-007` | Uma justificativa pode abranger várias ausências do mesmo aluno e motivo/período, inclusive de modalidades diferentes, respeitando o prazo individual. | `JustificativaFalta`, `RegistroFrequencia` | Aceita em 14/08/2026 |
+| `Q-CLS-008` | Ficha de saúde mantém versão atual e histórico protegido; log comum guarda somente autor, instante e campos alterados. | `FichaSaude`, `RevisaoFichaSaude` | Aceita em 14/08/2026 |
+| `Q-CLS-009` | Suspensão não amplia automaticamente a turma; administrador decide novo período e ocorrências ao reativar. | `Turma`, `AgendaTurma`, `Aula` | Aceita em 14/08/2026 |
+| `Q-CLS-010` | Reagendamento preserva a aula e cria histórico de valores, motivo, autor e instante; depois da realização, o estado muda para `REALIZADA`. | `Aula`, `AlteracaoAula` | Aceita em 14/08/2026 |
+
+A rodada estrutural final também foi aceita:
+
+| ID | Decisão incorporada | Classes afetadas | Situação |
+| --- | --- | --- | --- |
+| `Q-CLS-011` | Manter uma `Pessoa` única por CPF, com conta opcional e um ou mais perfis; ser responsável não cria conta automaticamente. | `Pessoa`, `Usuario`, perfis e `ResponsavelLegal` | Aceita em 14/08/2026 |
+| `Q-CLS-012` | Depois da nova confirmação, atualizar o contato da pessoa responsável em todos os vínculos e notificar os alunos vinculados. | `Pessoa`, `VinculoResponsavel` | Aceita em 14/08/2026 |
+| `Q-CLS-013` | Critérios em texto, versionados por modalidade e idade, avaliados com `ATENDEU` ou `NAO_ATENDEU` e observação, sem pontuação automática. | `CriterioSelecao`, `AvaliacaoCriterio` | Aceita em 14/08/2026 |
+| `Q-CLS-014` | Não persistir `SOLICITADA`; o pedido produz inscrição confirmada, fila, candidatura ou rejeição. | `Inscricao`, `EntradaListaEspera`, `CandidaturaSelecao` | Aceita em 14/08/2026 |
+| `Q-CLS-015` | Usar os sete estados de justificativa e permitir cancelamento pelo aluno somente antes da primeira decisão, após aviso dos efeitos. | `JustificativaFalta`, `DecisaoJustificativa` | Aceita em 14/08/2026 |
+
+Não restam decisões estruturais abertas para a revisão desta versão. Componentes futuros de WhatsApp, relatórios, exportações, mapas e QR Code deverão passar por refinamento próprio antes do desenvolvimento.
 
 ## 16. Critérios de aprovação
 
@@ -1350,3 +1585,4 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Heitor Leite | Refinamento do diagrama de classes do Documento de Visão em seis fluxos críticos; inclusão de serviços, interfaces, estados, invariantes, segurança, concorrência e rastreabilidade | Rascunho |
+| `0.2.0` | 14/08/2026 | Heitor Leite | Incorporação das decisões funcionais e estruturais; pessoa única por CPF, perfis e conta opcional, saúde versionada, estados definidos, fila e seleção, justificativas, ocorrências de aula, e-mail atual, integrações futuras e glossário | Pronto para revisão |

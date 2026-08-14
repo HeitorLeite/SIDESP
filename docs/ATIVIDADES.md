@@ -9,25 +9,27 @@
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
 | Órgão demandante | Secretaria de Esportes de Guaratinguetá |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `SEGURANCA.md` |
-| Responsável técnico | Heitor Leite — Tech Lead |
-| Responsável de negócio | Secretaria de Esportes — representante nominal pendente |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`, `CASOS_DE_USO.md` `0.2.0`, `CLASSES_OU_COMPONENTES.md` `0.2.0`, `SEGURANCA.md` `0.1.0` |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| QA | Micael Phillipini |
 | Versão | `0.1.0` |
 | Data | 13/08/2026 |
 | Classificação | Interna |
-| Status | Rascunho — fluxos propostos, ainda não implementados |
-| Próxima revisão | Após resolução das pendências da seção 16 ou mudança de fluxo, integração, permissão ou regra |
+| Status | Em refinamento — fluxos propostos, ainda não implementados |
+| Próxima revisão | Após resolução das questões próprias do documento e conferência cruzada |
 
 ## Aprovações
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Responsável de negócio | Pendente | Não aprovado | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente de revisão | — |
 | Product Owner | Lívia Andrade | Pendente de revisão | — |
 | Tech Lead | Heitor Leite | Pendente de revisão | — |
 | QA | Micael Phillipini | Pendente de revisão dos caminhos e erros | — |
-| Segurança/Privacidade | Pendente | Não avaliado | — |
-| Operações | Pendente | Não avaliado | — |
+| Segurança/Privacidade interna | Heitor Leite | Pendente de revisão | — |
+| Infraestrutura para implantação | Prefeitura/Embrass | Alinhamento futuro | — |
 
 ## 1. Objetivo e escopo
 
@@ -42,12 +44,31 @@ Foram priorizados:
 5. chamada e diário de aula;
 6. justificativa de falta e comprovante;
 7. apuração automática de faltas e cancelamento;
-8. notificações e WhatsApp;
+8. notificações internas e e-mail, mantendo WhatsApp como evolução futura;
 9. alteração de permissões administrativas;
-10. relatórios, exportação e download;
+10. relatórios, exportação e download como fluxo futuro, fora da primeira versão;
 11. incidente de segurança com dados pessoais.
 
 ## 2. Convenções dos diagramas
+
+### 2.1 Glossário técnico
+
+| Termo | Significado no documento |
+| --- | --- |
+| API | Porta de comunicação usada pelo frontend Angular para acessar o backend Spring Boot. |
+| Transação | Grupo de alterações que deve ser concluído por inteiro ou desfeito por inteiro. |
+| Rollback | Desfazimento automático de uma transação que falhou antes da conclusão. |
+| Compensação | Nova operação registrada para corrigir uma ação que já havia sido concluída, sem apagar o histórico. |
+| Idempotência | Proteção para que a repetição da mesma solicitação não duplique inscrição, chamada, aviso ou outro resultado. |
+| Outbox | Lista confiável de eventos gravada junto com a operação principal para que avisos e processamentos sejam enviados depois sem se perder. |
+| Worker | Processo automático que executa tarefas em segundo plano, como expirar ofertas ou enviar mensagens. |
+| Retry | Nova tentativa automática depois de uma falha temporária. |
+| Backoff | Aumento gradual do intervalo entre novas tentativas. |
+| MFA | Segunda confirmação de identidade; para administradores do SIDESP será um código enviado por e-mail. |
+| Correlation ID | Código técnico usado para localizar a mesma operação entre registros do sistema. |
+| Storage privado | Área protegida para guardar arquivos sem gerar endereço público. |
+
+### 2.2 Símbolos utilizados
 
 | Elemento | Significado |
 | --- | --- |
@@ -63,7 +84,7 @@ Foram priorizados:
 
 Todos os fluxos estão no estado **Proposto**. Uma pendência destacada não deve ser preenchida por decisão técnica isolada.
 
-### 2.1 Regras comuns
+### 2.3 Regras comuns
 
 - Toda operação protegida começa com sessão válida e autorização verificada no backend.
 - O frontend não determina permissão nem estado final do negócio.
@@ -77,11 +98,11 @@ Todos os fluxos estão no estado **Proposto**. Uma pendência destacada não dev
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; MFA e tempos de sessão pendentes |
-| Atores | Usuário cadastrado, frontend, API, banco/session store e provedor de MFA quando adotado |
+| Status | Proposto; valores de MFA, sessão e limitação definidos nos requisitos |
+| Atores | Usuário cadastrado, frontend Angular, API Spring Boot, banco/armazenamento de sessão e serviço de e-mail |
 | Casos/requisitos | `UC-IDN-02`; `RF-IDN-002`; `RN-017`; `RNF-SEG-001/003/004/005` |
 | Segurança | `SEG-IDN-*`, `SEG-SES-*`, `SEG-API-006/007`, `SEG-LOG-*` |
-| Pendências | `Q-010`, `PSEG-003` |
+| Decisões aplicadas | MFA administrativo por e-mail; código por 10 minutos e 5 tentativas; sessões de 15 min/8 h para administradores e 30 min/24 h para os demais; espera progressiva e limites de `RNF-SEG-004/005/008` |
 
 ```mermaid
 flowchart LR
@@ -111,7 +132,7 @@ flowchart LR
         B4["Verificar hash em tempo seguro"]
         B5{"Credencial válida e conta ativa?"}
         B6{"MFA obrigatório para o perfil/risco?"}
-        B7["Criar desafio de uso único"]
+        B7["Criar ou reenviar desafio de uso único com limites"]
         B8{"Segundo fator válido e não reutilizado?"}
         B9["Rotacionar identificador e criar sessão opaca"]
         B10["Definir expiração por inatividade e absoluta"]
@@ -127,7 +148,7 @@ flowchart LR
         D3["ROLLBACK: não criar sessão parcial"]
     end
 
-    subgraph X["Provedor MFA opcional"]
+    subgraph X["Serviço de e-mail para MFA administrativo"]
         direction TB
         X1["Entregar/verificar desafio"]
         X2{"Timeout ou falha externa?"}
@@ -156,6 +177,7 @@ flowchart LR
 - conta inexistente, senha errada, conta inativa e identificador inválido produzem resposta externa indistinguível.
 - falha/timeout de MFA não cria sessão parcial.
 - sessão é criada apenas após todos os fatores exigidos.
+- reenvio do MFA administrativo exige intervalo mínimo de 60 segundos, aceita no máximo 5 envios por hora e invalida qualquer código anterior.
 - login repetido cria sessões distintas ou revoga/limita conforme política; nunca reutiliza ID fixado pelo cliente.
 - cookie deve ser `Secure`, `HttpOnly`, `SameSite` e opaco.
 
@@ -163,11 +185,11 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; canal, expiração e política de revogação pendentes |
-| Atores | Usuário, frontend, backend, banco e serviço de recuperação |
+| Status | Proposto; canal e expiração definidos; alcance da revogação de sessões em refinamento |
+| Atores | Usuário, frontend Angular, API Spring Boot, banco e serviço de e-mail |
 | Casos/requisitos | `UC-IDN-03`; `RF-IDN-003`; `SE003` |
 | Segurança | `SEG-IDN-002/009/010`, `SEG-SES-006`, `SEG-API-007` |
-| Pendências | `Q-010`, `PSEG-003` |
+| Decisões aplicadas | Link enviado exclusivamente ao e-mail confirmado, válido por 30 minutos e de uso único; resposta não revela se a conta existe |
 
 ```mermaid
 flowchart LR
@@ -204,7 +226,7 @@ flowchart LR
         B10["Validar nova senha e lista de comprometidas"]
         B11{"Senha válida?"}
         B12["Atualizar hash da senha e consumir token"]
-        B13["Revogar sessões conforme política"]
+        B13["Revogar todas as sessões existentes"]
         B14["Registrar auditoria"]
     end
 
@@ -243,17 +265,18 @@ flowchart LR
 - solicitação inicial não revela se a conta existe.
 - token expirado, usado ou de outra finalidade falha.
 - transação incompleta não altera senha nem consome o token parcialmente.
+- recuperação de senha encerra todas as sessões existentes; o usuário precisa entrar novamente.
 - logs não contêm token nem senha.
 
 ## 5. Fluxo crítico 3 — solicitação de inscrição
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; simultaneidade, idade e processo seletivo parcialmente pendentes |
+| Status | Proposto; regras de elegibilidade e resultados diretos definidos; regra final de critérios seletivos em refinamento |
 | Atores | Aluno, frontend, backend e banco |
 | Casos/requisitos | `UC-INS-01/02/03`; `RF-INS-001/002`; `RN-001`, `RN-008`, `RN-009`, `RN-012`, `RN-018` |
 | Segurança | `SEG-AUTZ-003/004`, `SEG-API-007/008`, `SEG-RES-002` |
-| Pendências | `Q-002`, `Q-004`, `Q-012` |
+| Decisões aplicadas | Duas modalidades diferentes; seleção em andamento conta; fila não conta; idade verificada na solicitação; conflito de horário apenas avisa; pedido não persiste `SOLICITADA` |
 
 ```mermaid
 flowchart LR
@@ -328,11 +351,11 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; prazo e fallback pendentes |
+| Status | Proposto; prazo e canal obrigatório definidos |
 | Atores | Processo automático, aluno, backend, banco e serviço de notificação |
 | Casos/requisitos | `UC-AUT-01`, `UC-INS-05/07`; `RF-INS-004`; `RN-010`, `RN-011` |
 | Segurança | `SEG-API-008`, `SEG-RES-002/003`, `SEG-WA-*` |
-| Pendências | `Q-003`, `Q-009`, `Q-017`, `Q-021` |
+| Decisões aplicadas | Oferta por 48 horas corridas desde o registro e a notificação interna; WhatsApp fica fora da primeira versão; recusa ou expiração avança a fila sem duplicidade |
 
 ```mermaid
 flowchart LR
@@ -372,7 +395,7 @@ flowchart LR
 
     subgraph U["Aluno"]
         direction TB
-        U1["Consultar oferta e prazo"]
+        U1["Entrar no SIDESP e abrir Minhas ofertas"]
         U2{"Confirmar ou recusar?"}
         U3(["Inscrição confirmada"])
         U4(["Oferta encerrada"])
@@ -412,6 +435,8 @@ flowchart LR
 ### 6.1 Aceite e compensação
 
 - uma vaga mantém no máximo uma oferta ativa.
+- confirmação e recusa só podem ocorrer na área autenticada `Minhas ofertas`; e-mail ou notificação apenas direciona o aluno para essa tela.
+- apagar a notificação não cancela nem oculta a oferta ativa da área `Minhas ofertas`.
 - falha de mensagem não oferece a vaga simultaneamente ao próximo; o fallback e o prazo devem ser definidos.
 - confirmação concorrente com expiração produz um único estado final transacional.
 - recusa/expiração gera nova vaga de forma idempotente.
@@ -420,11 +445,11 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; estratégia de conectividade instável pendente |
+| Status | Proposto; estratégia de conectividade instável definida |
 | Atores | Professor, frontend, backend, banco e processo de apuração |
 | Casos/requisitos | `UC-PRF-02/03`; `RF-FRQ-002/003/004`; `RN-013`, `RN-014`, `RN-019` |
 | Segurança | `SEG-AUTZ-003/006`, `SEG-API-008`, `SEG-RES-008` |
-| Pendências | `Q-005`, `Q-018`, `Q-020` |
+| Decisões aplicadas | Rascunho parcialmente offline até 24 horas após a aula; sem dados de saúde; não sobrescreve conflito; somente confirmação do servidor conclui o salvamento |
 
 ```mermaid
 flowchart LR
@@ -446,7 +471,8 @@ flowchart LR
         F3["Gerar chave idempotente da aula"]
         F4{"Há conectividade?"}
         F5["Enviar chamada por HTTPS"]
-        F6["Manter rascunho/estado pendente conforme decisão futura"]
+        F6["Guardar rascunho local protegido até o limite de 24 horas"]
+        F9["Excluir rascunho após sincronização ou expiração"]
         F7["Exibir sucesso somente após confirmação do backend"]
         F8["Exibir erro e preservar dados permitidos"]
     end
@@ -458,11 +484,11 @@ flowchart LR
         B3{"Autorizado?"}
         B4["Validar aula, alunos, estados e conteúdo obrigatório"]
         B5{"Entrada completa e válida?"}
-        B6["Bloquear chamada da aula"]
-        B7{"Chamada já salva para a chave?"}
+        B6["Bloquear chamada da aula e comparar versão"]
+        B7{"Chamada já salva ou alterada no servidor?"}
         B8["Criar chamada, diário e registros de frequência"]
         B9["Criar auditoria e eventos de apuração"]
-        B10["Retornar estado existente sem duplicar"]
+        B10["Retornar estado existente ou conflito sem sobrescrever"]
     end
 
     subgraph D["Banco"]
@@ -487,10 +513,11 @@ flowchart LR
     B3 -->|"sim"| B4 --> B5
     B5 -->|"não"| F8
     B5 -->|"sim"| B6 --> B7
-    B7 -->|"sim"| B10 --> F7 --> P5
+    B7 -->|"mesma chave já salva"| B10 --> F7 --> F9 --> P5
+    B7 -->|"versão diferente"| B10 --> F8 --> P6
     B7 -->|"não"| B8 --> B9 --> D1
     D1 -->|"falha"| D3 --> F8
-    D1 -->|"válido"| D2 --> F7
+    D1 -->|"válido"| D2 --> F7 --> F9
     D2 -.-> W1 --> W2
 ```
 
@@ -500,28 +527,34 @@ flowchart LR
 - professor sem vínculo recebe negação mesmo alterando identificador na requisição.
 - repetição da chave retorna a chamada existente.
 - professor não altera chamada salva; correção segue fluxo administrativo com justificativa.
-- o ramo sem conectividade permanece explicitamente pendente: não pode mostrar sucesso falso.
+- o rascunho local não contém dados de saúde, expira no limite de 24 horas após a aula e é apagado depois da sincronização ou expiração.
+- conflito com uma versão salva no servidor não é sobrescrito; o professor recebe aviso e eventual correção segue o fluxo administrativo.
+- o ramo sem conectividade não pode mostrar sucesso falso.
 
 ## 8. Fluxo crítico 6 — justificativa de falta e comprovante
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; elegibilidade, formatos, retenção e scanner pendentes |
+| Status | Proposto; prazo, arquivos, estados, retenção inicial e tratamento do conjunto definidos; ferramenta de verificação será escolhida na implementação |
 | Atores | Aluno, frontend, backend, storage privado, scanner e administrador |
 | Casos/requisitos | `UC-JUS-01/02`, `UC-ADM-09`, `UC-AUT-04`; `RF-JUS-*`; `RN-003/004/024/025` |
 | Segurança | `SEG-ARQ-*`, `SEG-AUTZ-006/007`, `SEG-PRI-*` |
-| Pendências | `Q-001`, `Q-005`, `Q-007`, `Q-015`, `Q-016`, `PSEG-007` |
+| Decisões aplicadas | Até 7 dias por ausência; descrição obrigatória; 0 a 3 arquivos PDF/JPG/PNG de 10 MB; quarentena; decisão única para todas as ausências reunidas; recurso único e cancelamento somente antes da primeira decisão |
 
 ```mermaid
 flowchart LR
     subgraph A["Aluno"]
         direction TB
         A0(["Início"])
-        A1["Selecionar falta própria"]
-        A2["Informar descrição mínima e escolher comprovante"]
+        A1["Selecionar uma ou várias faltas próprias"]
+        A2["Informar descrição e, opcionalmente, até 3 comprovantes"]
         A3(["Justificativa em análise"])
         A4(["Envio recusado"])
-        A5(["Decisão recebida"])
+        A5(["Decisão inicial recebida"])
+        A6["Cancelar antes da primeira decisão"]
+        A7["Recorrer uma vez após recusa"]
+        A8(["Decisão final recebida"])
+        A9(["Justificativa cancelada"])
     end
 
     subgraph F["Frontend"]
@@ -535,18 +568,23 @@ flowchart LR
     subgraph B["Backend"]
         direction TB
         B1["Autenticar aluno e validar propriedade da frequência"]
-        B2["Validar falta, elegibilidade, prazo e duplicidade"]
+        B2["Validar aluno, motivo comum, prazo de cada falta e duplicidade"]
         B3{"Elegível?"}
+        B0{"Há comprovante?"}
         B4["Validar allowlist, tipo real, tamanho e nome"]
         B5{"Arquivo estruturalmente permitido?"}
         B6["Gerar nome/chave aleatória e metadados"]
-        B7["Criar justificativa somente após arquivo aprovado"]
+        B7["Criar justificativa ligada a todas as ausências selecionadas"]
         B8["Registrar auditoria sem conteúdo do arquivo"]
         B9["Autorizar administrador específico por objeto"]
         B10{"Administrador autorizado?"}
         B11["Disponibilizar arquivo protegido para análise"]
         B12["Validar decisão e motivo"]
         B13["Persistir decisão e evento de notificação"]
+        B14{"Ainda não existe primeira decisão?"}
+        B15["Cancelar justificativa e recalcular as faltas"]
+        B16["Validar prazo de 3 dias e escolher outro administrador"]
+        B17["Persistir decisão final do recurso"]
     end
 
     subgraph S["Storage e scanner"]
@@ -563,6 +601,8 @@ flowchart LR
         D1["COMMIT: justificativa + arquivo + auditoria"]
         D2["ROLLBACK e excluir arquivo órfão"]
         D3["COMMIT: decisão + auditoria + outbox"]
+        D4["COMMIT: cancelamento + auditoria + outbox"]
+        D5["COMMIT: recurso + auditoria + outbox"]
     end
 
     subgraph ADM["Administrador"]
@@ -571,18 +611,23 @@ flowchart LR
         M2["Analisar comprovante"]
         M3{"Aceitar ou recusar?"}
         M4(["Acesso administrativo negado"])
+        M5["Outro administrador analisa o recurso"]
     end
 
     subgraph N["Notificação"]
         direction TB
         N1["Notificar decisão sem anexar comprovante"]
+        N2["Notificar cancelamento"]
+        N3["Notificar decisão final"]
     end
 
     A0 --> A1 --> A2 --> F1
     F1 -->|"inválido"| F4 --> A4
     F1 -->|"válido"| F2 --> B1 --> B2 --> B3
     B3 -->|"não"| F4
-    B3 -->|"sim"| B4 --> B5
+    B3 -->|"sim"| B0
+    B0 -->|"não"| B7
+    B0 -->|"sim"| B4 --> B5
     B5 -->|"não"| F4
     B5 -->|"sim"| B6 --> S1 --> S2 --> S3
     S3 -->|"não"| S5 --> F4
@@ -593,25 +638,32 @@ flowchart LR
     B10 -->|"não"| M4
     B10 -->|"sim"| B11 --> M2 --> M3 --> B12 --> B13 --> D3
     D3 -.-> N1 -.-> A5
+    A3 -. "antes da primeira decisão" .-> A6 --> B14
+    B14 -->|"não"| F4
+    B14 -->|"sim"| B15 --> D4 -.-> N2 --> A9
+    A5 -. "recusa em até 3 dias" .-> A7 --> B16 --> M5 --> B17 --> D5 -.-> N3 --> A8
 ```
 
 ### 8.1 Aceite e compensação
 
 - arquivo rejeitado nunca alcança o estado “em análise”.
+- uma justificativa pode abranger várias ausências do mesmo aluno e recebe uma única decisão para o conjunto; resultados diferentes exigem justificativas separadas.
+- o comprovante é opcional; quando existir, cada arquivo passa por quarentena e verificação antes da análise.
 - falha após upload deve remover/quarentenar o arquivo órfão de forma rastreável.
 - professor não acessa arquivo nem decisão.
 - download exige autorização atual; chave de storage não é exposta.
 - decisão e evento de notificação são atômicos ou usam outbox.
+- o aluno só cancela antes da primeira decisão e pode recorrer uma vez de uma recusa, em até 3 dias corridos, para análise por outro administrador autorizado.
 
 ## 9. Fluxo crítico 7 — apuração de faltas, alertas e cancelamento
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; regras de contagem e tratamento de justificativa pendente são bloqueadores |
+| Status | Proposto; regra de contagem e tratamento de justificativa definidos |
 | Atores | Processo automático, backend, banco, aluno, responsável e notificação |
 | Casos/requisitos | `UC-AUT-02`, `UC-AUT-03`; `RF-COM-002/003`; `RN-002/003/005/006/007` |
 | Segurança | `SEG-RES-002/003`, `SEG-LOG-*`, `SEG-PRI-004/005` |
-| Pendências | `Q-001`, `Q-005`, `Q-008` |
+| Decisões aplicadas | Contagem mensal; alerta em `limite - 1`; cancelamento somente acima do limite; aula cancelada não conta; justificativa/recurso em análise suspende o cancelamento quando puder mudar o resultado |
 
 ```mermaid
 flowchart LR
@@ -679,21 +731,21 @@ flowchart LR
 
 ### 9.1 Aceite e cautelas
 
-- enquanto `Q-001` e `Q-005` não forem resolvidas, o sistema não deve cancelar automaticamente em produção.
+- a modalidade define seu próprio limite mensal; o alerta ocorre em `limite - 1` e o cancelamento somente quando as ausências válidas ultrapassam o limite.
 - evento repetido não duplica alerta ou cancelamento.
-- justificativa em análise segue tratamento aprovado; o diagrama propõe aguardar por segurança.
+- justificativa ou recurso em análise suspende o cancelamento quando aquela ausência puder mudar o resultado; a apuração é refeita após a decisão.
 - correção administrativa pode exigir compensação: reativar inscrição ou corrigir fila apenas por fluxo formal e auditado.
 - responsável só recebe dados do menor ao qual está validamente vinculado.
 
-## 10. Fluxo crítico 8 — entrega de notificações por WhatsApp
+## 10. Fluxo crítico 8 — entrega de notificações e canais externos
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; fornecedor, contrato, templates e fallback pendentes |
-| Atores | Serviço de negócio, outbox/worker, provedor de WhatsApp, webhook e suporte |
+| Status | Notificação interna e e-mail propostos para a primeira versão; WhatsApp mantido como fluxo futuro |
+| Atores | Serviço de negócio, outbox/worker, central interna, serviço de e-mail e futuro provedor de WhatsApp |
 | Casos/requisitos | `UC-COM-01`, `UC-COM-02`, `UC-COM-03`; `RF-COM-001/004`; `RN-020` |
 | Segurança | `SEG-WA-*`, `SEG-INT-*`, `SEG-SEG-*`, `SEG-LOG-*` |
-| Pendências | `Q-009`, `Q-017`, `PSEG-008` |
+| Decisões aplicadas | Central interna obrigatória; e-mail transacional com até 3 tentativas; WhatsApp somente após fornecedor, contrato e modelos aprovados |
 
 ```mermaid
 flowchart LR
@@ -773,11 +825,11 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; matriz e segunda aprovação pendentes |
+| Status | Proposto; matriz, MFA e proteções administrativas definidos |
 | Atores | Administrador total, frontend, backend, banco e usuário afetado |
 | Casos/requisitos | `UC-ADM-12`; `RF-ADM-007`; `RN-017`, `RN-022` |
 | Segurança | `SEG-IDN-007/008`, `SEG-AUTZ-002/005/010`, `SEG-OPS-*` |
-| Pendências | `Q-010`, `Q-011`, `PSEG-002/003` |
+| Decisões aplicadas | Somente administrador total gerencia administradores; MFA e motivo obrigatórios; sem segunda aprovação na primeira versão; último administrador total e o próprio acesso total são protegidos |
 
 ```mermaid
 flowchart LR
@@ -805,9 +857,6 @@ flowchart LR
         B2["Autorizar gestão de administradores"]
         B3{"Ator possui poder para conceder o conjunto?"}
         B4{"É autoelevação ou conflito de segregação?"}
-        B5{"Segunda aprovação exigida?"}
-        B6["Criar solicitação pendente de aprovação"]
-        B7{"Aprovação válida recebida?"}
         B8["Calcular diferença antes/depois"]
         B9["Aplicar atribuições com vigência"]
         B10["Revogar sessões afetadas"]
@@ -832,11 +881,7 @@ flowchart LR
     B3 -->|"não"| B12 --> F4 --> A5
     B3 -->|"sim"| B4
     B4 -->|"sim"| B12
-    B4 -->|"não"| B5
-    B5 -->|"sim"| B6 --> B7
-    B7 -->|"não/expirada"| B12
-    B7 -->|"sim"| B8
-    B5 -->|"não"| B8
+    B4 -->|"não"| B8
     B8 --> D1 --> B9 --> B10 --> B11 --> D2
     D2 -->|"falha"| D3 --> F4 --> A5
     D2 -->|"sucesso"| F4 --> A4
@@ -849,17 +894,17 @@ flowchart LR
 - ator não concede permissão que não possui ou autoeleva a própria conta.
 - alteração crítica exige autenticação recente e MFA.
 - sessões afetadas são revogadas após mudança relevante.
-- antes/depois, autor, aprovador, motivo e instante ficam auditados.
+- antes/depois, autor, motivo e instante ficam auditados; não há segunda aprovação na primeira versão.
 
 ## 12. Fluxo crítico 10 — relatório, exportação e download
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; fórmulas, campos, limiar, volume e retenção pendentes |
+| Status | Fluxo futuro, fora da primeira versão; depende de definição da Secretaria |
 | Atores | Gestor autorizado, frontend, backend, processo assíncrono, banco e storage privado |
 | Casos/requisitos | `UC-REL-01`, `UC-REL-02`, `UC-REL-03`; `RF-REL-001/002/003`; `RNF-PRI-003`, `RNF-EXP-001` |
 | Segurança | `SEG-EXP-*`, `SEG-MAP-*`, `SEG-AUTZ-008`, `SEG-API-004/007` |
-| Pendências | `Q-013`, `Q-014`, `Q-015`, `Q-016`, `PSEG-009` |
+| Decisões aplicadas | Não implementar antes da definição de campos, filtros, fórmulas e permissões; mapa de calor futuro usa grupo mínimo de 3; arquivo futuro expira em 24 horas |
 
 ```mermaid
 flowchart LR
@@ -954,11 +999,11 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; responsáveis e contatos pendentes |
+| Status | Proposto; responsabilidades acadêmicas definidas e autoridades institucionais pendentes apenas para a implantação real |
 | Atores | Monitoramento, segurança, operações, controlador, encarregado/jurídico e comunicação |
 | Origem | `SEGURANCA.md`, seção 30; LGPD e regulamentação vigente da ANPD |
 | Segurança | `SEG-VUL-*`, `SEG-LOG-*`, `SEG-OPS-*`, `SEG-PRI-*` |
-| Pendências | `PSEG-001`, `PSEG-010`, `PSEG-012` |
+| Decisões aplicadas | Heitor coordena pelo grupo; Prefeitura/Embrass apoiam infraestrutura; Kauãn e Livia participam das decisões de impacto e comunicação; autoridade regulatória será indicada pela Prefeitura antes da implantação |
 
 ```mermaid
 flowchart LR
@@ -969,7 +1014,7 @@ flowchart LR
         M2["Acionar canal de incidente sem reproduzir segredo"]
     end
 
-    subgraph S["Segurança / comando de incidente"]
+    subgraph S["Heitor Leite / coordenação do incidente pelo grupo"]
         direction TB
         S1["Confirmar recebimento e iniciar registro restrito"]
         S2["Classificar severidade e nomear responsável"]
@@ -982,7 +1027,7 @@ flowchart LR
         S9["Definir erradicação e critérios de recuperação"]
     end
 
-    subgraph O["Operações / desenvolvimento autorizado"]
+    subgraph O["Prefeitura, Embrass e equipe técnica autorizada"]
         direction TB
         O1["Isolar workload, conta, rota ou integração"]
         O2["Revogar sessão/segredo e bloquear abuso"]
@@ -993,7 +1038,7 @@ flowchart LR
         O7["Reverter/continuar contenção e corrigir"]
     end
 
-    subgraph P["Controlador, encarregado e jurídico"]
+    subgraph P["Autoridades institucionais designadas antes da implantação"]
         direction TB
         P1["Avaliar natureza dos dados e impacto aos titulares"]
         P2{"Pode causar risco ou dano relevante?"}
@@ -1002,7 +1047,7 @@ flowchart LR
         P5["Registrar fundamento da decisão de não comunicar"]
     end
 
-    subgraph C["Comunicação e pós-incidente"]
+    subgraph C["Kauãn, Livia e responsáveis oficiais pela comunicação"]
         direction TB
         C1["Fornecer orientação aprovada e canal de dúvidas"]
         C2["Realizar lições aprendidas"]
@@ -1026,6 +1071,8 @@ flowchart LR
 ### 13.1 Aceite e autoridade
 
 - pessoa desenvolvedora, fornecedor ou IA não decide sozinho sobre comunicação regulatória.
+- Heitor Leite coordena a resposta acadêmica; Prefeitura e Embrass apoiam as ações de infraestrutura; Kauãn Raphael e Livia Andrade participam das decisões de impacto e comunicação.
+- comunicação oficial à ANPD ou aos titulares depende das autoridades municipais formalmente designadas antes da implantação real.
 - contenção não destrói evidência antes de preservação razoável.
 - segredo exposto é revogado/rotacionado; removê-lo do arquivo não é suficiente.
 - recuperação só encerra após teste de integridade e monitoramento.
@@ -1063,24 +1110,39 @@ flowchart LR
 | Exportação | Arquivo protegido e temporário | Sem arquivo parcial | Excluir temporários e permitir nova solicitação |
 | Incidente | Serviço íntegro e risco tratado | Contenção mantida | Rollback/restore e nova correção |
 
-## 16. Pendências que impedem aprovação completa
+## 16. Decisões do refinamento e questões restantes
 
-| ID | Decisão | Diagramas afetados |
+As antigas questões `Q-001` a `Q-021` já foram resolvidas no Levantamento de Requisitos. Este documento registra abaixo somente as decisões próprias da sequência dos fluxos.
+
+### 16.1 Decisões incorporadas
+
+| ID | Decisão | Fluxos afetados | Situação |
+| --- | --- | --- | --- |
+| `Q-ATV-001` | Rascunho offline da chamada dura no máximo até 24 horas após a aula, não contém saúde e é apagado após sincronização ou expiração. | Chamada | Aceita em 14/08/2026 |
+| `Q-ATV-002` | Uma versão diferente já salva no servidor não é sobrescrita pelo rascunho offline; o conflito é mostrado e eventual correção segue o fluxo administrativo. | Chamada | Aceita em 14/08/2026 |
+| `Q-ATV-003` | Uma justificativa que reúne várias ausências recebe uma decisão única; resultados diferentes exigem justificativas separadas. | Justificativa e faltas | Aceita em 14/08/2026 |
+| `Q-ATV-004` | Critérios seletivos podem ser obrigatórios ou opcionais, mas nenhum resultado decide automaticamente. Professor ou administrador responsável registra a decisão humana final. | Inscrição e seleção | Aceita em 14/08/2026 |
+| `Q-ATV-005` | Heitor coordena incidentes pelo grupo; Prefeitura/Embrass apoiam infraestrutura; Kauãn e Livia participam de impacto e comunicação; autoridades municipais decidirão comunicações oficiais. | Incidente | Aceita em 14/08/2026 |
+
+### 16.2 Segunda rodada de decisões
+
+| ID | Decisão | Fluxos afetados | Situação |
+| --- | --- | --- | --- |
+| `Q-ATV-006` | Critério obrigatório não bloqueia automaticamente; professor ou administrador responsável toma a decisão humana final. | Inscrição e seleção | Aceita em 14/08/2026 |
+| `Q-ATV-007` | Recuperação encerra todas as sessões; alteração normal mantém a sessão atual e encerra as demais. | Autenticação e recuperação | Aceita em 14/08/2026 |
+| `Q-ATV-008` | Reenvio de MFA: 60 segundos entre envios, no máximo 5 por hora e apenas o código mais recente válido. | Autenticação | Aceita em 14/08/2026 |
+| `Q-ATV-009` | Oferta só é confirmada ou recusada dentro do SIDESP autenticado; mensagens apenas direcionam para `Minhas ofertas`. | Oferta de vaga | Aceita em 14/08/2026 |
+| `Q-ATV-010` | Apagar a notificação não cancela a oferta, que permanece em `Minhas ofertas` até resposta ou expiração. | Oferta e notificações | Aceita em 14/08/2026 |
+
+### 16.3 Questões ainda em refinamento
+
+| ID | Decisão necessária | Fluxos afetados |
 | --- | --- | --- |
-| `Q-001` | Relação entre limite variável, segunda falta e terceira justificável | 8 e 9 |
-| `Q-002` | Significado de duas modalidades e simultaneidade | 5 |
-| `Q-003` | Prazo da oferta e fallback | 6 |
-| `Q-004` | Data de referência da idade | 5 |
-| `Q-005` | Contagem de faltas, correção, aula cancelada e justificativa em análise | 7, 8 e 9 |
-| `Q-007/008` | Saúde, menor e responsável | 8 e 9 |
-| `Q-009/017` | Fornecedor, obrigatoriedade e fallback do WhatsApp | 6, 9 e 10 |
-| `Q-010/011` | Autenticação, MFA, sessão e matriz administrativa | 3, 4 e 11 |
-| `Q-012` | Estados e critérios do processo seletivo | 5 |
-| `Q-013/014` | Fórmulas, campos e limiar analítico | 12 |
-| `Q-015/016` | Retenção, arquivos, volume, RPO/RTO | 8, 12 e 13 |
-| `Q-018` | Operação com internet instável | 7 |
-| `Q-020/021` | Substituição de professor e reentrada na fila | 6 e 7 |
-| `PSEG-001/012` | Responsáveis, modelo de ameaças, runbook e incidentes | 13 |
+| `Q-ATV-011` | Definir quais professores podem avaliar um processo seletivo. | Inscrição e seleção |
+| `Q-ATV-012` | Definir se aprovação com critério obrigatório não atendido exige justificativa adicional. | Inscrição e seleção |
+| `Q-ATV-013` | Definir o resultado de duas avaliações simultâneas da mesma candidatura. | Inscrição e seleção |
+| `Q-ATV-014` | Definir o comportamento quando não houver capacidade no momento da aprovação. | Inscrição e seleção |
+| `Q-ATV-015` | Definir o efeito de indisponibilidade do SIDESP durante o prazo de uma oferta. | Oferta de vaga |
 
 ## 17. Critérios de aprovação
 
