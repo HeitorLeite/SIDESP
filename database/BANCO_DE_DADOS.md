@@ -8,24 +8,29 @@
 | --- | --- |
 | Documento | Modelo de Dados e Diagrama Entidade-Relacionamento |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
-| Versão | `0.1.0` |
-| Data | 13/08/2026 |
-| Status | **Rascunho — proposto, não aprovado para implementação** |
+| Versão | `0.2.0` |
+| Data | 17/08/2026 |
+| Status | **Pronto para revisão — ainda não aprovado para implementação** |
 | Classificação | Uso interno |
-| Responsável sugerido | Dados/Backend |
-| Revisores necessários | Produto, Backend, Segurança, Privacidade e responsável pelo banco |
-| Documentos de origem | `../docs/LEVANTAMENTO_DE_REQUISITOS.md`, `../docs/CASOS_DE_USO.md`, `../docs/CLASSES_OU_COMPONENTES.md`, `../docs/ATIVIDADES.md` e `../docs/SEGURANCA.md` |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| QA | Micael Phillipini |
+| Revisores necessários | Produto, Backend, Segurança, Privacidade e infraestrutura Prefeitura/Embrass |
+| Documentos de origem | `../docs/LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`, `../docs/CASOS_DE_USO.md` `0.2.0`, `../docs/CLASSES_OU_COMPONENTES.md` `0.2.0`, `../docs/ATIVIDADES.md` `0.2.0` e `../docs/SEGURANCA.md` `0.2.0` |
 
 ## Aprovações
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Product Owner/Secretaria | A definir | Pendente | — |
-| Liderança técnica | A definir | Pendente | — |
-| Backend/Dados | A definir | Pendente | — |
-| Segurança e privacidade | A definir | Pendente | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente de revisão | — |
+| Product Owner | Livia Andrade | Pendente de revisão | — |
+| Responsável técnico / Backend / Dados | Heitor Leite | Pendente de revisão | — |
+| Segurança e privacidade interna | Heitor Leite | Pendente de revisão | — |
+| QA | Micael Phillipini | Pendente de revisão das constraints e testes | — |
+| Infraestrutura para implantação | Prefeitura/Embrass | Alinhamento futuro | — |
 
-Nenhuma tabela, migração ou política descrita neste documento deve ser tratada como aprovada antes do preenchimento das aprovações e da resolução das pendências bloqueadoras.
+Nenhuma tabela, migração ou política descrita neste documento deve ser tratada como aprovada para implementação antes do preenchimento das aprovações. As decisões técnicas acadêmicas estão resolvidas; as validações institucionais indicadas continuam necessárias antes de uma implantação real.
 
 ## 1. Objetivo e escopo
 
@@ -37,13 +42,13 @@ O modelo cobre:
 - polos, modalidades, regras, turmas, horários, aulas e notícias;
 - inscrições, lista de espera, ofertas e processo seletivo;
 - chamada, frequência, correções, justificativas e comprovantes;
-- notificações, WhatsApp, outbox e callbacks;
-- relatórios, agregações, exportações e mapas de calor;
+- notificações internas, e-mail e outbox; WhatsApp e callbacks aparecem apenas como evolução futura;
+- relatórios, agregações, exportações e mapas de calor como estruturas futuras, fora da primeira versão;
 - auditoria, idempotência, arquivos e rastreabilidade.
 
-Não fazem parte desta versão:
+Não fazem parte da primeira versão:
 
-- dados de saúde do aluno, enquanto finalidade, campos, base legal e acesso não forem aprovados;
+- WhatsApp, relatórios, exportações, mapas e QR Code, que exigirão novo refinamento antes do desenvolvimento;
 - presença por QR Code, pois não existe requisito funcional aprovado;
 - localização individual de alunos;
 - modelo multi-tenant, porque o SIDESP foi documentado como sistema de uma única Secretaria;
@@ -53,26 +58,64 @@ Não fazem parte desta versão:
 
 | Tema | Definição nesta versão | Status |
 | --- | --- | --- |
-| Modelo principal | Relacional e normalizado | Proposto |
-| Banco transacional | PostgreSQL `16.x` ou versão estável homologada | Proposto; arquitetura deve aprovar |
-| Identificadores | UUID opaco para entidades expostas | Proposto |
-| Migrações | Flyway, com scripts versionados e imutáveis após aplicação | Proposto |
-| Arquivos | Conteúdo fora do banco relacional; metadados e autorização no banco | Proposto |
-| Sessões | Persistência revogável; banco ou armazenamento dedicado a decidir | Pendente |
-| Relatórios | Consultas autorizadas sobre dados operacionais; réplica/warehouse somente se necessário | Pendente de volume |
-| Fuso de apresentação | `America/Sao_Paulo` | Proposto; negócio deve ratificar |
-| Instantes persistidos | UTC com offset/tipo equivalente a `TIMESTAMPTZ` | Proposto |
-| Exclusão | Sem exclusão física operacional de registros históricos; descarte conforme política aprovada | Proposto |
+| Modelo principal | Relacional e normalizado | Definido pela equipe |
+| Banco transacional | MySQL `8.x`, preferencialmente versão LTS homologada | Definido pela equipe; versão exata antes do desenvolvimento |
+| Identificadores | UUID opaco na API e `BINARY(16)` no MySQL | Definido em 17/08/2026 |
+| Migrações | Flyway, com scripts versionados e imutáveis após aplicação | Definido em 17/08/2026 |
+| Arquivos | Conteúdo fora do banco relacional; metadados e autorização no banco | Definido pela equipe; tecnologia física será homologada com a infraestrutura |
+| Sessões | Persistência revogável no MySQL na primeira versão | Definido em 17/08/2026; armazenamento dedicado somente em evolução justificada |
+| Relatórios | Fora da primeira versão; estruturas só serão implementadas após definição da Secretaria | Formalmente adiado |
+| Fuso de apresentação | `America/Sao_Paulo` | Definido |
+| Instantes persistidos | UTC em `DATETIME(6)`; conversão para o fuso ocorre na aplicação | Definido para o MySQL |
+| Proteção de dados | Valor criptografado e hash normalizado para CPF/e-mail; saúde criptografada por campo | Definido; chaves dependem de Prefeitura/Embrass |
+| Exclusão | Inativação operacional; após retenção, descarte ou anonimização irreversível preservando apenas estatística não identificável | Definido em 17/08/2026 |
+| E-mail | E-mail confirmado de login é exclusivo de uma conta; e-mail usado somente como contato de responsável pode aparecer em vários vínculos | Definido em 17/08/2026 |
+| Estados | Códigos em `VARCHAR` validados por `CHECK` ou tabela de domínio; não usar `ENUM` nativo do MySQL | Definido em 17/08/2026 |
+| Textos | `utf8mb4` com comparação geral sem diferenciar maiúsculas, minúsculas e acentos; códigos, tokens e hashes usam comparação exata | Definido em 17/08/2026 |
+| Auditoria | Registros somente de inclusão; alteração e exclusão não ficam disponíveis para a conta comum da aplicação | Definido em 17/08/2026 |
+| CPF já cadastrado | Nunca criar outra pessoa; recuperar, reativar ou vincular a conta após validar a identidade | Definido em 17/08/2026 |
+| Campos pessoais | CPF, e-mails, telefones, contato de emergência e saúde usam criptografia por campo; nome e nascimento usam criptografia do banco e controle de acesso | Definido em 17/08/2026 |
+| Concorrência de vaga | Bloquear a turma/vaga na transação, recalcular a capacidade e aceitar somente a primeira confirmação válida | Definido em 17/08/2026 |
+| Históricos | Inativação e `ON DELETE RESTRICT`; descarte ou anonimização controlada somente após a retenção | Definido em 17/08/2026 |
+| Primeiro administrador | Procedimento seguro, sem senha fixa em seed, com e-mail confirmado, link único, senha, MFA e auditoria | Definido em 17/08/2026 |
 
-O PostgreSQL é uma proposta de baseline, não uma autorização de instalação. Os diagramas usam tipos lógicos que podem ser adaptados sem alterar as regras de negócio.
+O MySQL 8.x é a baseline aprovada. A versão exata, criptografia em repouso, chaves e parâmetros operacionais serão homologados com Prefeitura e Embrass antes da implantação real.
 
 ## 3. Convenções de modelagem
 
+### 3.1 Glossário técnico
+
+| Termo | Significado no documento |
+| --- | --- |
+| DER | Diagrama que mostra as tabelas e como elas se relacionam. |
+| Chave primária (PK) | Identificador único de um registro. |
+| Chave estrangeira (FK) | Campo que liga um registro a outra tabela. |
+| Constraint | Regra aplicada pelo banco para impedir dados inválidos ou duplicados. |
+| Índice | Estrutura que acelera pesquisas, com custo adicional de espaço e escrita. |
+| Migração | Script versionado que altera a estrutura do banco de maneira controlada. |
+| Flyway | Ferramenta que executa e registra as migrações na ordem correta. |
+| UUID | Identificador difícil de prever; será exibido normalmente pela API e guardado como `BINARY(16)`. |
+| Hash | Resultado irreversível usado para comparação segura, como localizar CPF/e-mail sem usar o valor aberto no índice. |
+| Criptografia | Proteção reversível somente com chave autorizada, necessária quando o sistema precisa recuperar o valor original. |
+| Anonimização | Remoção irreversível da possibilidade razoável de identificar uma pessoa. |
+| Soft delete | Inativação lógica que preserva o histórico durante a retenção, sem apagar imediatamente a linha. |
+| Outbox | Tabela de eventos gravada junto com a operação principal para evitar perda de notificações. |
+| Concorrência otimista | Uso de uma versão do registro para impedir que uma alteração sobrescreva outra silenciosamente. |
+| Transação | Conjunto de alterações confirmado por inteiro; se alguma parte falhar, nenhuma delas é tratada como concluída. |
+| Collation | Regra do banco para comparar e ordenar textos, incluindo maiúsculas, minúsculas e acentos. |
+| Seed | Dados técnicos iniciais, como papéis e permissões, inseridos de forma controlada. |
+| `ON DELETE RESTRICT` | Regra que impede apagar um registro enquanto outro histórico ainda depende dele. |
+| RPO | Perda máxima de dados aceitável após uma falha; no SIDESP, inicialmente até 24 horas. |
+| RTO | Tempo máximo planejado para restaurar o serviço; no SIDESP, inicialmente até 8 horas. |
+
+### 3.2 Regras gerais
+
 - Tabelas e colunas usam `snake_case`, nomes no plural para tabelas e nomes no singular para conceitos.
-- Chaves primárias usam UUID, salvo tabelas de associação que também podem possuir chave composta.
+- Chaves primárias lógicas usam UUID; no MySQL serão `BINARY(16)` e convertidas pela aplicação.
 - Todas as chaves estrangeiras devem ser indexadas quando participarem de consulta, autorização ou junção frequente.
-- Instantes técnicos usam `TIMESTAMPTZ`; datas sem horário usam `DATE`; horários recorrentes usam `TIME`.
-- Estados são persistidos como códigos estáveis e validados por `CHECK` ou tabela de domínio. O código Java não deve depender da ordem numérica de enumerações.
+- Instantes técnicos usam `DATETIME(6)` em UTC; datas sem horário usam `DATE`; horários recorrentes usam `TIME`.
+- Estados são persistidos como códigos estáveis em `VARCHAR`, validados por `CHECK` ou tabela de domínio. Não será usado o `ENUM` nativo do MySQL, e o código Java não deve depender da ordem numérica de enumerações.
+- Textos gerais usam `utf8mb4` e `utf8mb4_0900_ai_ci`, permitindo todos os caracteres e pesquisas de nomes sem diferenciar maiúsculas, minúsculas ou acentos. Códigos, tokens e hashes usam tipo binário ou collation binária para comparação exata.
 - Entidades mutáveis críticas possuem `versao` para concorrência otimista.
 - `criado_em` e `atualizado_em` são obrigatórios nas entidades mutáveis, salvo histórico imutável que use apenas `ocorrido_em`.
 - Campos `*_por` apontam para `usuarios.id` quando o ator for humano. Processos automáticos usam ator técnico identificável na auditoria.
@@ -80,15 +123,15 @@ O PostgreSQL é uma proposta de baseline, não uma autorização de instalação
 - Exclusão em cascata não deve apagar histórico. O padrão das FKs históricas é `RESTRICT`; `SET NULL` só é permitido quando a identidade do relacionamento continuar preservada por outro identificador seguro.
 - O nome original de arquivo nunca é usado como caminho ou chave física.
 
-### 3.1 Colunas comuns
+### 3.3 Colunas comuns
 
 Quando aplicável, as tabelas de domínio possuem:
 
 | Coluna | Tipo lógico | Regra |
 | --- | --- | --- |
-| `id` | UUID | PK, gerado no servidor |
-| `criado_em` | TIMESTAMPTZ | Obrigatória e definida pelo servidor |
-| `atualizado_em` | TIMESTAMPTZ | Obrigatória e atualizada pelo servidor |
+| `id` | `BINARY(16)` | PK com UUID gerado no backend |
+| `criado_em` | `DATETIME(6)` UTC | Obrigatória e definida pelo servidor |
+| `atualizado_em` | `DATETIME(6)` UTC | Obrigatória e atualizada pelo servidor |
 | `versao` | INTEGER | `NOT NULL`, inicia em zero, nunca negativa |
 | `status` | VARCHAR | Código validado; transição não é aceita livremente da API |
 
@@ -99,13 +142,13 @@ flowchart LR
     app["Backend SIDESP"]
     db[("Banco relacional transacional")]
     storage[("Armazenamento privado de arquivos")]
-    session[("Sessões/cache revogável — decisão pendente")]
+    session[("Sessões revogáveis no MySQL")]
     backup[("Backup criptografado")]
     analytics[("Réplica/estrutura analítica — somente se necessária")]
 
     app -->|"consultas parametrizadas e transações"| db
     app -->|"chave opaca; sem caminho público"| storage
-    app -.->|"opcional"| session
+    app -->|"sessões da primeira versão"| session
     db --> backup
     storage --> backup
     db -.->|"dados minimizados/autorizados"| analytics
@@ -126,36 +169,48 @@ Os diagramas foram divididos por domínio para preservar legibilidade. Uma entid
 
 ```mermaid
 erDiagram
-    USUARIOS {
+    PESSOAS {
         uuid id PK
-        string cpf_normalizado UK
+        string cpf_hash UK
+        binary cpf_criptografado
         string nome
-        string email_normalizado UK
-        string telefone
+        date data_nascimento
+        string email_hash
+        binary email_criptografado
+        binary telefone_criptografado
         string status
         datetime criado_em
         datetime atualizado_em
         int versao
     }
+    USUARIOS {
+        uuid id PK
+        uuid pessoa_id FK, UK
+        string email_login_hash UK
+        binary email_login_criptografado
+        string status
+        datetime email_confirmado_em
+        datetime criado_em
+        datetime atualizado_em
+        int versao
+    }
     ALUNOS {
-        uuid usuario_id PK, FK
-        date data_nascimento
+        uuid pessoa_id PK, FK
+        binary contato_emergencia_nome_criptografado
+        binary contato_emergencia_telefone_criptografado
     }
     PROFESSORES {
-        uuid usuario_id PK, FK
-        string registro UK
-        string especialidade
+        uuid pessoa_id PK, FK
+        string apresentacao
+        string formacao
+        string foto_chave
     }
     ADMINISTRADORES {
-        uuid usuario_id PK, FK
+        uuid pessoa_id PK, FK
         string nivel
     }
     RESPONSAVEIS_LEGAIS {
-        uuid id PK
-        string cpf_normalizado UK
-        string nome
-        string email_normalizado
-        string telefone
+        uuid pessoa_id PK, FK
         string status
     }
     VINCULOS_RESPONSAVEIS {
@@ -168,6 +223,26 @@ erDiagram
         string status
         datetime comprovado_em
     }
+    FICHAS_SAUDE {
+        uuid id PK
+        uuid aluno_id FK, UK
+        binary alergias_criptografado
+        binary restricoes_criptografado
+        binary medicamentos_criptografado
+        binary deficiencias_adaptacoes_criptografado
+        binary observacoes_medicas_criptografado
+        binary tipo_sanguineo_criptografado
+        datetime atualizado_em
+        int versao
+    }
+    REVISOES_FICHA_SAUDE {
+        uuid id PK
+        uuid ficha_id FK
+        binary valores_anteriores_criptografados
+        string campos_alterados
+        uuid alterada_por FK
+        datetime alterada_em
+    }
     CREDENCIAIS {
         uuid id PK
         uuid usuario_id FK, UK
@@ -175,8 +250,14 @@ erDiagram
         string algoritmo
         datetime senha_alterada_em
         string status
+    }
+    CONTROLES_TENTATIVAS_LOGIN {
+        uuid id PK
+        uuid usuario_id FK
+        string identificador_hash
         int falhas_consecutivas
-        datetime bloqueada_ate
+        datetime aguardar_ate
+        datetime atualizado_em
     }
     SESSOES {
         uuid id PK
@@ -226,12 +307,18 @@ erDiagram
         uuid permissao_id FK
     }
 
-    USUARIOS ||--o| ALUNOS : possui_perfil
-    USUARIOS ||--o| PROFESSORES : possui_perfil
-    USUARIOS ||--o| ADMINISTRADORES : possui_perfil
+    PESSOAS ||--o| USUARIOS : possui_conta_opcional
+    PESSOAS ||--o| ALUNOS : possui_perfil
+    PESSOAS ||--o| PROFESSORES : possui_perfil
+    PESSOAS ||--o| ADMINISTRADORES : possui_perfil
+    PESSOAS ||--o| RESPONSAVEIS_LEGAIS : possui_perfil
     ALUNOS ||--o{ VINCULOS_RESPONSAVEIS : possui
     RESPONSAVEIS_LEGAIS ||--o{ VINCULOS_RESPONSAVEIS : participa
+    ALUNOS ||--o| FICHAS_SAUDE : possui
+    FICHAS_SAUDE ||--o{ REVISOES_FICHA_SAUDE : preserva
+    USUARIOS ||--o{ REVISOES_FICHA_SAUDE : altera
     USUARIOS ||--|| CREDENCIAIS : autentica_com
+    USUARIOS ||--o{ CONTROLES_TENTATIVAS_LOGIN : limita
     USUARIOS ||--o{ SESSOES : inicia
     USUARIOS ||--o{ TOKENS_RECUPERACAO : recebe
     USUARIOS ||--o{ ATRIBUICOES_PAPEIS : recebe
@@ -249,7 +336,7 @@ erDiagram
         uuid id PK
     }
     PROFESSORES {
-        uuid usuario_id PK, FK
+        uuid pessoa_id PK, FK
     }
     POLOS {
         uuid id PK
@@ -309,17 +396,31 @@ erDiagram
         uuid id PK
         uuid turma_id FK
         uuid polo_id FK
+        string local_temporario_nome
+        string local_temporario_endereco
+        string local_temporario_complemento
         datetime inicio
         datetime fim
         string status
         string motivo_cancelamento
         int versao
     }
+    ALTERACOES_AULA {
+        uuid id PK
+        uuid aula_id FK
+        string tipo_alteracao
+        json valores_anteriores
+        json valores_novos
+        string motivo
+        uuid realizada_por FK
+        datetime realizada_em
+    }
     VINCULOS_PROFESSORES_TURMAS {
         uuid id PK
         uuid professor_id FK
         uuid turma_id FK
         string tipo
+        boolean avaliador_selecao
         date inicio_vigencia
         date fim_vigencia
         string status
@@ -354,6 +455,8 @@ erDiagram
     TURMAS ||--|{ AGENDAS_TURMA : organiza
     TURMAS ||--o{ AULAS : gera
     POLOS ||--o{ AULAS : sedia
+    AULAS ||--o{ ALTERACOES_AULA : preserva
+    USUARIOS ||--o{ ALTERACOES_AULA : realiza
     PROFESSORES ||--o{ VINCULOS_PROFESSORES_TURMAS : participa
     TURMAS ||--o{ VINCULOS_PROFESSORES_TURMAS : recebe
     USUARIOS ||--o{ NOTICIAS : escreve
@@ -371,7 +474,10 @@ erDiagram
         uuid id PK
     }
     ALUNOS {
-        uuid usuario_id PK, FK
+        uuid pessoa_id PK, FK
+    }
+    MODALIDADES {
+        uuid id PK
     }
     TURMAS {
         uuid id PK
@@ -385,7 +491,7 @@ erDiagram
         uuid turma_id FK
         string status
         string origem
-        datetime solicitada_em
+        datetime criada_em
         datetime confirmada_em
         datetime encerrada_em
         string motivo_encerramento
@@ -408,6 +514,7 @@ erDiagram
         bigint sequencia
         datetime entrou_em
         datetime encerrou_em
+        bigint ultima_posicao_exibida
         string status
         string motivo_encerramento
         int versao
@@ -419,6 +526,7 @@ erDiagram
         uuid chave_vaga UK
         datetime oferecida_em
         datetime expira_em
+        bigint pausa_oficial_segundos
         datetime respondida_em
         string status
         string chave_idempotencia UK
@@ -432,6 +540,25 @@ erDiagram
         datetime criada_em
         datetime atualizada_em
         int versao
+    }
+    CRITERIOS_SELECAO {
+        uuid id PK
+        uuid modalidade_id FK
+        int idade_minima
+        int idade_maxima
+        int versao_criterio
+        string descricao
+        boolean obrigatorio
+        string status
+    }
+    AVALIACOES_CRITERIOS {
+        uuid id PK
+        uuid candidatura_id FK
+        uuid criterio_id FK
+        string resultado
+        string observacao
+        uuid avaliada_por FK
+        datetime avaliada_em
     }
     TRANSICOES_CANDIDATURA {
         uuid id PK
@@ -450,8 +577,7 @@ erDiagram
         string tipo
         string regra_excepcionada
         string justificativa
-        uuid solicitada_por FK
-        uuid aprovada_por FK
+        uuid executada_por FK
         datetime criada_em
         string status
     }
@@ -465,6 +591,9 @@ erDiagram
     OFERTAS_VAGA o|--o| INSCRICOES : converte_em
     ALUNOS ||--o{ CANDIDATURAS_SELECAO : apresenta
     TURMAS ||--o{ CANDIDATURAS_SELECAO : avalia
+    CANDIDATURAS_SELECAO ||--o{ AVALIACOES_CRITERIOS : recebe
+    MODALIDADES ||--o{ CRITERIOS_SELECAO : define
+    CRITERIOS_SELECAO ||--o{ AVALIACOES_CRITERIOS : orienta
     CANDIDATURAS_SELECAO ||--o{ TRANSICOES_CANDIDATURA : registra
     INSCRICOES o|--o{ EXCECOES_INSCRICAO : pode_receber
     ALUNOS ||--o{ EXCECOES_INSCRICAO : afeta
@@ -481,7 +610,10 @@ erDiagram
         uuid id PK
     }
     PROFESSORES {
-        uuid usuario_id PK, FK
+        uuid pessoa_id PK, FK
+    }
+    ALUNOS {
+        uuid pessoa_id PK, FK
     }
     REGRAS_MODALIDADE {
         uuid id PK
@@ -532,16 +664,21 @@ erDiagram
     }
     JUSTIFICATIVAS_FALTA {
         uuid id PK
-        uuid registro_frequencia_id FK
+        uuid aluno_id FK
         string status
         text descricao
         datetime enviada_em
         datetime decidida_em
         int versao
     }
+    JUSTIFICATIVAS_REGISTROS {
+        uuid id PK
+        uuid justificativa_id FK
+        uuid registro_frequencia_id FK
+    }
     ARQUIVOS_COMPROVANTES {
         uuid id PK
-        uuid justificativa_id FK, UK
+        uuid justificativa_id FK
         string nome_original_sanitizado
         string tipo_detectado
         bigint tamanho_bytes
@@ -553,7 +690,8 @@ erDiagram
     }
     DECISOES_JUSTIFICATIVA {
         uuid id PK
-        uuid justificativa_id FK, UK
+        uuid justificativa_id FK
+        int ordem
         string resultado
         string motivo
         uuid decidida_por FK
@@ -579,16 +717,18 @@ erDiagram
     CHAMADAS ||--|{ REGISTROS_FREQUENCIA : contem
     INSCRICOES ||--o{ REGISTROS_FREQUENCIA : recebe
     REGISTROS_FREQUENCIA ||--o{ CORRECOES_FREQUENCIA : preserva
-    REGISTROS_FREQUENCIA ||--o| JUSTIFICATIVAS_FALTA : pode_justificar
-    JUSTIFICATIVAS_FALTA ||--|| ARQUIVOS_COMPROVANTES : exige
-    JUSTIFICATIVAS_FALTA ||--o| DECISOES_JUSTIFICATIVA : recebe
+    ALUNOS ||--o{ JUSTIFICATIVAS_FALTA : envia
+    JUSTIFICATIVAS_FALTA ||--|{ JUSTIFICATIVAS_REGISTROS : abrange
+    REGISTROS_FREQUENCIA ||--o{ JUSTIFICATIVAS_REGISTROS : referencia
+    JUSTIFICATIVAS_FALTA ||--o{ ARQUIVOS_COMPROVANTES : pode_anexar
+    JUSTIFICATIVAS_FALTA ||--o{ DECISOES_JUSTIFICATIVA : recebe
     USUARIOS ||--o{ CORRECOES_FREQUENCIA : corrige
     USUARIOS ||--o{ DECISOES_JUSTIFICATIVA : decide
     INSCRICOES ||--o{ APURACOES_FALTAS : apura
     REGRAS_MODALIDADE ||--o{ APURACOES_FALTAS : aplica
 ```
 
-`APURACOES_FALTAS` registra a regra e a versão dos dados usadas pelo processo automático. A tabela é proposta para tornar alertas e cancelamentos reproduzíveis; seu formato final depende da resolução de `Q-001` e `Q-005`.
+`APURACOES_FALTAS` registra a regra e a versão dos dados usadas pelo processo automático. O alerta ocorre em `limite - 1`; o cancelamento somente quando as ausências válidas ultrapassam o limite. Justificativa ou recurso em análise suspende o cancelamento quando puder alterar o resultado.
 
 ### 5.5 Notificações, integração, idempotência e auditoria
 
@@ -711,7 +851,9 @@ erDiagram
     USUARIOS o|--o{ REGISTROS_AUDITORIA : atua
 ```
 
-### 5.6 Relatórios, agregações e exportações
+### 5.6 Relatórios, agregações e exportações — expansão futura
+
+Este bloco preserva uma proposta inicial para uma versão posterior. Ele não cria compromisso de implementação na primeira versão, pois campos, indicadores e formatos ainda serão definidos pela Secretaria.
 
 ```mermaid
 erDiagram
@@ -809,13 +951,17 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 
 | Tabela | Finalidade e campos específicos | Classificação predominante |
 | --- | --- | --- |
-| `usuarios` | Identidade comum. `cpf_normalizado` e `email_normalizado` permitem unicidade e autenticação; `nome`, `telefone` e `status` atendem cadastro e contato. | Pessoal/Restrito |
-| `alunos` | Especialização 1:1 de usuário. `data_nascimento` permite idade e identificação de menor. | Pessoal/Restrito |
-| `professores` | Especialização 1:1. `registro` identifica profissional e `especialidade` informa atuação permitida. | Pessoal/Interno |
-| `administradores` | Especialização 1:1. `nivel` registra categoria administrativa; permissões efetivas vêm do RBAC. | Restrito |
-| `responsaveis_legais` | Identidade e contato do responsável sem presumir conta própria. | Pessoal/Restrito |
+| `pessoas` | Pessoa única por CPF, com valores pessoais criptografados e hashes de pesquisa. O e-mail deste cadastro pode ser apenas contato e não precisa ser exclusivo. Pode acumular perfis e possuir conta opcional. | Pessoal/Restrito |
+| `usuarios` | Conta opcional ligada 1:1 à pessoa, com e-mail confirmado de login exclusivo, estado e controle de acesso. | Restrito |
+| `alunos` | Perfil 1:1 da pessoa e contato de emergência obrigatório protegido. | Pessoal/Restrito |
+| `professores` | Perfil 1:1 da pessoa; apresentação, formação e foto são opcionais. | Pessoal/Interno |
+| `administradores` | Perfil 1:1 da pessoa; `nivel` registra categoria administrativa e permissões efetivas vêm do RBAC. | Restrito |
+| `responsaveis_legais` | Perfil de pessoa responsável, sem criação automática de conta e reutilizável em vários vínculos. | Pessoal/Restrito |
 | `vinculos_responsaveis` | Liga menor e responsável, com tipo, vigência, comprovação e estado. | Pessoal/Restrito |
-| `credenciais` | Credencial obrigatória e exclusiva de cada usuário, com hash de senha, algoritmo/parâmetros, estado, falhas e bloqueio. Nunca contém senha em claro. | Restrito |
+| `fichas_saude` | Versão atual criptografada de alergias, restrições, medicamentos, adaptações, observações e tipo sanguíneo opcional. | Sensível/Restrito |
+| `revisoes_ficha_saude` | Histórico protegido; auditoria comum expõe somente campos alterados, autor e instante. | Sensível/Restrito |
+| `credenciais` | Credencial obrigatória e exclusiva de cada usuário, com hash de senha, algoritmo/parâmetros e estado. Nunca contém senha em claro. | Restrito |
+| `controles_tentativas_login` | Espera progressiva separada do estado da conta, sem bloqueio permanente. | Restrito |
 | `sessoes` | Hash do identificador, expirações, atividade e revogação. Não guarda token reutilizável em claro. | Restrito |
 | `tokens_recuperacao` | Hash de token de uso único, finalidade, expiração e consumo. | Restrito |
 | `papeis` | Catálogo estável de papéis. | Interno |
@@ -833,7 +979,7 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 | `turmas` | Polo, modalidade, capacidade, exigência de seleção e estado. | Público/Interno por campo |
 | `agendas_turma` | Dias, horários e vigência da agenda. | Público/Interno por campo |
 | `aulas` | Ocorrências da turma, local efetivo, intervalo, estado e motivo operacional. | Interno; parte pode ser pública aos inscritos |
-| `vinculos_professores_turmas` | Professor, turma, tipo, vigência e estado usados na autorização por objeto. | Pessoal/Interno |
+| `vinculos_professores_turmas` | Professor, turma, tipo, vigência, estado e designação opcional como avaliador de seleção. | Pessoal/Interno |
 | `noticias` | Conteúdo atual, autor, agendamento, publicação, inativação e versão. | Público quando publicada; interno antes disso |
 | `versoes_noticia` | Cópia histórica de título, resumo e conteúdo, com autor da alteração. | Interno |
 
@@ -846,8 +992,10 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 | `entradas_lista_espera` | Ordem transacional por turma, estado e encerramento; posição é calculada. | Pessoal/Confidencial |
 | `ofertas_vaga` | Reserva, prazo, resposta, idempotência e possível conversão em inscrição. | Pessoal/Confidencial |
 | `candidaturas_selecao` | Estado do candidato no processo seletivo. | Pessoal/Confidencial |
+| `criterios_selecao` | Texto versionado por modalidade/idade, indicando se o critério é obrigatório ou opcional. | Interno |
+| `avaliacoes_criterios` | Resultado `ATENDEU`/`NAO_ATENDEU`, observação, avaliador e instante. | Pessoal/Restrito |
 | `transicoes_candidatura` | Histórico imutável das mudanças no Kanban, com decisor e justificativa. | Pessoal/Restrito |
-| `excecoes_inscricao` | Regra excepcionada, justificativa, solicitante, aprovador e objeto afetado. | Pessoal/Restrito |
+| `excecoes_inscricao` | Regra excepcionada, justificativa, administrador total que executou a ação e objeto afetado. Não exige segunda aprovação. | Pessoal/Restrito |
 
 ### 6.4 Frequência, justificativas e arquivos
 
@@ -857,7 +1005,8 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 | `diarios_aula` | Conteúdo obrigatório e observações minimizadas. | Interno; pode conter dado pessoal se usado incorretamente |
 | `registros_frequencia` | Estado de presença por inscrição e chamada. | Pessoal/Confidencial |
 | `correcoes_frequencia` | Antes/depois, justificativa, administrador e instante imutáveis. | Pessoal/Restrito |
-| `justificativas_falta` | Falta concreta, descrição, estado, envio e decisão. | Pessoal; potencialmente Sensível/Restrito |
+| `justificativas_falta` | Solicitação do aluno, descrição, estado e decisão única para uma ou várias ausências. | Pessoal; potencialmente Sensível/Restrito |
+| `justificativas_registros` | Associação entre uma justificativa e as ausências abrangidas. | Pessoal/Restrito |
 | `arquivos_comprovantes` | Metadados, hash, tipo detectado, chave privada, varredura e descarte. O conteúdo fica fora do banco. | Potencialmente Sensível/Restrito |
 | `decisoes_justificativa` | Resultado, motivo, decisor e instante. | Pessoal/Restrito |
 | `apuracoes_faltas` | Totais, regra aplicada, versão dos dados e efeitos calculados por competência. | Pessoal/Restrito |
@@ -876,7 +1025,7 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 | `requisicoes_idempotentes` | Hash da chave e da requisição, escopo, resultado e expiração. Não guarda corpo integral. | Restrito |
 | `registros_auditoria` | Ator, ação, alvo, resultado, motivo, mudanças minimizadas, correlação e origem protegida. | Restrito |
 
-### 6.6 Relatórios e exportações
+### 6.6 Relatórios e exportações — expansão futura
 
 | Tabela | Finalidade e campos específicos | Classificação predominante |
 | --- | --- | --- |
@@ -893,11 +1042,11 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 
 | Relação/regra | Cardinalidade ou constraint proposta |
 | --- | --- |
-| Usuário–perfil | Cada usuário possui no máximo um registro em cada subtipo; combinação de perfis depende da matriz de papéis aprovada. |
-| Usuário–credencial | `usuarios 1 : 1 credenciais`; toda conta deve possuir exatamente uma credencial e `credenciais.usuario_id` é obrigatório e único. |
+| Pessoa–conta/perfil | Cada CPF identifica uma pessoa; ela possui no máximo uma conta e no máximo um registro de cada perfil, podendo acumular perfis. Ser responsável não cria conta. |
+| Usuário–credencial | `usuarios 1 : 1 credenciais`; toda conta possui exatamente uma credencial e `credenciais.usuario_id` é obrigatório e único. |
 | Aluno–responsável | N:N por `vinculos_responsaveis`, com vigência e comprovação. |
 | Papel–permissão | N:N, com unicidade em `(papel_id, permissao_id)`. |
-| Professor–turma | N:N por vínculo vigente; sobreposição permitida ou bloqueada conforme `Q-020`. |
+| Professor–turma | N:N por vínculo com início/fim; pode atuar em várias turmas e uma turma pode ter vários professores. Avaliação seletiva exige vínculo vigente e designação. |
 | Modalidade–regra | `1 : N`; no máximo uma regra ativa para o mesmo instante. |
 | Turma–agenda | `1 : 1..N` para turma ativa; agenda histórica não é apagada. |
 | Turma–aula | `1 : N`; `(turma_id, inicio)` deve ser único salvo regra de reposição aprovada. |
@@ -905,11 +1054,12 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 | Turma–fila | `1 : N`; `sequencia` é única dentro da turma. |
 | Entrada–oferta | `1 : N` histórico; no máximo uma oferta ativa por entrada e por `chave_vaga`. |
 | Candidatura–transição | `1 : N`; transições são imutáveis e ordenadas por instante/ID. |
+| Candidatura–avaliação | `1 : N`; uma avaliação por critério/versão, com ator autorizado e concorrência pela versão da candidatura. |
 | Aula–chamada | `1 : 0..1`; `chamadas.aula_id` é único. |
 | Chamada–frequência | `1 : N`; `(chamada_id, inscricao_id)` é único. |
-| Frequência–justificativa | `1 : 0..1` enquanto reanálise não for aprovada. |
-| Justificativa–arquivo | `1 : 1` quando enviada; rascunho pode existir antes do arquivo aprovado. |
-| Justificativa–decisão | `1 : 0..1`; modelo muda se houver recurso/reanálise. |
+| Frequência–justificativa | N:N por `justificativas_registros`; cada ausência pertence a no máximo uma justificativa ativa. |
+| Justificativa–arquivo | `1 : 0..3`; descrição é obrigatória e comprovantes são opcionais. |
+| Justificativa–decisão | `1 : 0..2`; decisão inicial e, quando houver recurso, decisão final por outro administrador autorizado. |
 | Evento–outbox | `1 : 1`; gravados na mesma transação. |
 | Notificação–destinatário | `1 : 1..N`; destinatários são calculados pelo backend. |
 | Destinatário–tentativa | `1 : 0..N`; retentativas não duplicam efeito de negócio. |
@@ -920,6 +1070,7 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 
 - `ON DELETE RESTRICT` é o padrão para usuário, aluno, turma, inscrição, chamada, justificativa, notificação e auditoria.
 - Exclusão lógica/inativação deve preservar todas as FKs históricas.
+- Um pedido de exclusão não apaga em cascata inscrições, chamadas ou decisões ainda dentro da retenção. Ao final do prazo, uma rotina controlada elimina ou anonimiza os campos permitidos e registra o resultado.
 - Conteúdo de arquivo pode ser descartado e o metadado permanecer com estado `EXCLUIDO`, sem manter a chave reutilizável.
 - Uma FK nunca substitui autorização. Toda leitura ou alteração valida ator, permissão, vínculo e objeto no backend.
 
@@ -927,8 +1078,10 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 
 ### 8.1 Constraints locais
 
-- `usuarios.cpf_normalizado` é único e contém somente CPF normalizado após validação da aplicação.
-- `email_normalizado`, quando informado, é comparado sem diferença de maiúsculas/minúsculas e possui unicidade aprovada.
+- `pessoas.cpf_hash` é único; o CPF aberto não participa de índice e permanece criptografado.
+- Se o CPF já pertencer a uma pessoa preservada no banco, o cadastro nunca cria uma segunda pessoa. Conta ativa segue para recuperação de acesso; conta inativa pode ser reativada após confirmação da identidade; pessoa cadastrada somente como responsável pode receber uma conta vinculada ao mesmo registro depois da validação do e-mail.
+- `usuarios.email_login_hash` é único e representa o e-mail confirmado usado para entrar no SIDESP. O valor correspondente permanece criptografado.
+- e-mails usados somente como contato do responsável ficam em `pessoas` e podem se repetir; um contato repetido não concede acesso às contas relacionadas.
 - `idade_minima >= 0`, `idade_maxima >= idade_minima` e `limite_faltas_mensais >= 0`.
 - `capacidade_maxima > 0`.
 - latitude fica entre `-90` e `90`; longitude entre `-180` e `180`.
@@ -937,21 +1090,24 @@ Os tipos detalhados permanecem lógicos até a aprovação da arquitetura. `Púb
 - contagens, tentativas, tamanhos e versões não podem ser negativos.
 - `arquivos_comprovantes.tamanho_bytes` e `arquivos_exportados.tamanho_bytes` respeitam limites configurados e aprovados.
 - somente um dos campos `usuario_id` e `responsavel_id` é preenchido em `destinatarios_notificacao`.
-- estado `EM_ANALISE` de justificativa exige comprovante aprovado; a garantia completa ocorre por transação/serviço.
-- uma decisão só pode apontar para justificativa vigente e ainda decidível.
+- justificativa `EM_ANALISE` exige descrição e pelo menos uma ausência associada, mas não exige arquivo.
+- justificativa possui de zero a três arquivos de até 10 MB; arquivo só fica disponível depois da verificação.
+- cada justificativa possui no máximo duas decisões, e o recurso exige decisor diferente da decisão inicial.
 
 ### 8.2 Invariantes entre registros
 
 As regras abaixo exigem transação com isolamento, bloqueio, constraint parcial ou estratégia equivalente:
 
-- última vaga não pode confirmar duas inscrições concorrentes;
+- a última vaga não pode confirmar duas inscrições concorrentes: a transação bloqueia temporariamente a turma ou a reserva de vaga, recalcula a capacidade e somente a primeira confirmação concluída prevalece; a seguinte vai para a lista de espera ou permanece `EM_ANALISE`, conforme o fluxo;
 - fila mantém sequência única e ordenação estável por turma;
 - oferta expirada não pode ser confirmada e uma vaga liberada não pode ser consumida duas vezes;
 - redução de capacidade abaixo das inscrições confirmadas é bloqueada até plano explícito;
 - professor registra chamada somente com vínculo vigente na turma e data;
 - chamada, diário, frequências, evento e outbox são confirmados atomicamente;
 - correção não sobrescreve histórico e reprocessa efeitos de faltas de forma idempotente;
-- cancelamento por faltas ocorre uma vez e não é executado enquanto a regra sobre justificativa pendente estiver indefinida;
+- cancelamento por faltas ocorre uma vez; justificativa/recurso em análise suspende o cancelamento quando puder alterar o resultado;
+- a primeira decisão seletiva concorrente confirmada prevalece; versão antiga não sobrescreve o estado atual;
+- candidatura sem capacidade permanece `EM_ANALISE`; aprovação exige vaga ou exceção de capacidade do administrador total;
 - alteração de papel não permite autoelevação e registra concessor, antes/depois e motivo;
 - geração de arquivo falha de forma atômica; arquivo parcial nunca recebe estado `DISPONIVEL`.
 
@@ -959,7 +1115,8 @@ As regras abaixo exigem transação com isolamento, bloqueio, constraint parcial
 
 | Tabela | Índice | Justificativa |
 | --- | --- | --- |
-| `usuarios` | único em `cpf_normalizado`; único funcional em e-mail normalizado quando não nulo | Cadastro, login e prevenção de duplicidade |
+| `pessoas` | único em `cpf_hash`; índice não único em `email_hash` | Cadastro e pesquisa autorizada de contato sem indexar valor aberto |
+| `usuarios` | único em `pessoa_id`; único em `email_login_hash` | Uma conta por pessoa e um e-mail confirmado por conta de acesso |
 | `sessoes` | único em `hash_identificador`; `(usuario_id, status)`; `expira_em` | Autenticação, revogação e limpeza |
 | `tokens_recuperacao` | único em `hash_token`; `expira_em` | Consumo único e descarte |
 | `atribuicoes_papeis` | `(usuario_id, status, inicio_vigencia, fim_vigencia)` | Autorização por vigência |
@@ -969,13 +1126,16 @@ As regras abaixo exigem transação com isolamento, bloqueio, constraint parcial
 | `aulas` | único proposto em `(turma_id, inicio)`; `(turma_id, status, inicio)` | Agenda, chamada e avisos |
 | `vinculos_professores_turmas` | `(professor_id, status, inicio_vigencia, fim_vigencia)` e `(turma_id, status)` | Autorização horizontal |
 | `noticias` | único em `slug`; `(status, publicar_em DESC)` | Listagem pública e publicação agendada |
-| `inscricoes` | parcial único em `(aluno_id, turma_id)` para estados ativos; `(turma_id, status)`; `(aluno_id, status)` | Duplicidade, capacidade e consultas do aluno |
-| `entradas_lista_espera` | único em `(turma_id, sequencia)`; parcial único em `(turma_id, aluno_id)` para estados ativos; `(turma_id, status, sequencia)` | Ordem e próximo elegível |
-| `ofertas_vaga` | parcial único em `chave_vaga` quando ativa; `(status, expira_em)` | Reserva, expiração e concorrência |
-| `candidaturas_selecao` | parcial único em `(aluno_id, turma_id)` para candidatura ativa; `(turma_id, status, atualizada_em)` | Kanban |
+| `inscricoes` | chave gerada anulável para unicidade de vínculo ativo; `(turma_id, status)`; `(aluno_id, status)` | MySQL não possui índice parcial; coluna gerada ou tabela de vínculo ativo oferece garantia equivalente |
+| `entradas_lista_espera` | único em `(turma_id, sequencia)`; chave gerada para entrada ativa por turma/aluno; `(turma_id, status, sequencia)` | Ordem e próximo elegível |
+| `ofertas_vaga` | chave gerada única por vaga quando ativa; `(status, expira_em)` | Reserva, expiração, pausa oficial e concorrência |
+| `candidaturas_selecao` | chave gerada para candidatura ativa por aluno/turma; `(turma_id, status, atualizada_em)` | Kanban e concorrência |
+| `criterios_selecao` | `(modalidade_id, idade_minima, idade_maxima, versao_criterio, status)` | Versão de critérios aplicável |
+| `avaliacoes_criterios` | único em `(candidatura_id, criterio_id)` | Uma avaliação vigente por critério da candidatura |
 | `chamadas` | único em `aula_id`; `(professor_id, salva_em)` | Uma chamada por aula e histórico do professor |
 | `registros_frequencia` | único em `(chamada_id, inscricao_id)`; `(inscricao_id, status)` | Uma marcação e cálculo de faltas |
-| `justificativas_falta` | único/condicional em `registro_frequencia_id`; `(status, enviada_em)` | Duplicidade e fila administrativa |
+| `justificativas_falta` | `(aluno_id, status, enviada_em)` | Fila administrativa por aluno e estado |
+| `justificativas_registros` | único em `(justificativa_id, registro_frequencia_id)` e proteção de ausência em justificativa ativa | Associação sem duplicidade |
 | `apuracoes_faltas` | `(inscricao_id, competencia, calculada_em DESC)` | Reprocessamento reproduzível |
 | `itens_outbox` | `(status, proxima_tentativa_em)` | Consumidor e retentativas |
 | `tentativas_entrega` | único em `chave_idempotencia`; único quando presente em `(canal, identificador_provedor)`; `(status, proxima_tentativa_em)` | Deduplicação e retry |
@@ -984,28 +1144,28 @@ As regras abaixo exigem transação com isolamento, bloqueio, constraint parcial
 | `solicitacoes_relatorio` | `(solicitante_id, solicitada_em DESC)`; `(status, solicitada_em)` | Consulta e processamento |
 | `exportacoes_relatorio` | `(solicitante_id, criada_em DESC)`; `(status, expira_em)` | Autorização e descarte |
 
-Índices parciais e funcionais citados dependem da aprovação do PostgreSQL. Outra tecnologia deverá oferecer garantia equivalente.
+O MySQL 8.x não oferece índices parciais como o PostgreSQL. Quando a unicidade depender do estado ativo, serão usadas colunas geradas anuláveis com índice único ou outra estrutura equivalente documentada na migração Flyway.
 
 ## 10. Estados persistidos
 
-| Conceito | Estados propostos |
+| Conceito | Estados aprovados ou planejados |
 | --- | --- |
-| Usuário | `PENDENTE`, `ATIVO`, `BLOQUEADO`, `INATIVO` |
+| Usuário | `PENDENTE_CONFIRMACAO`, `ATIVO`, `INATIVO` |
 | Cadastro operacional | `ATIVO`, `INATIVO` |
 | Turma | `PLANEJADA`, `ATIVA`, `SUSPENSA`, `ENCERRADA`, `INATIVA` |
 | Aula | `AGENDADA`, `REALIZADA`, `CANCELADA`, `REAGENDADA` |
-| Inscrição | `SOLICITADA`, `CONFIRMADA`, `EM_SELECAO`, `CANCELADA`, `ENCERRADA` |
+| Inscrição | `CONFIRMADA`, `CANCELADA`, `ENCERRADA` |
 | Lista de espera | `AGUARDANDO`, `COM_OFERTA`, `CONVERTIDA`, `DESISTENTE`, `INELEGIVEL`, `ENCERRADA` |
 | Oferta | `ATIVA`, `CONFIRMADA`, `RECUSADA`, `EXPIRADA`, `CANCELADA` |
-| Candidatura | `INSCRITA`, `EM_ANALISE`, `PENDENTE`, `APROVADA`, `RECUSADA`, `CANCELADA` |
+| Candidatura | `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO`, `CANCELADO` |
 | Chamada | `ABERTA`, `SALVA`, `CORRIGIDA` |
-| Frequência | `PRESENTE`, `AUSENTE`, `DISPENSADO` |
-| Justificativa | `EM_RASCUNHO`, `EM_ANALISE`, `ACEITA`, `RECUSADA`, `CANCELADA` |
+| Frequência | `PRESENTE`, `AUSENTE` |
+| Justificativa | `EM_ANALISE`, `ACEITA`, `RECUSADA`, `EM_RECURSO`, `ACEITA_EM_RECURSO`, `RECUSADA_FINAL`, `CANCELADA` |
 | Arquivo | `EM_QUARENTENA`, `APROVADO`, `REJEITADO`, `EXPIRADO`, `EXCLUIDO` |
 | Entrega | `PENDENTE`, `ENVIADA_AO_PROVEDOR`, `ENTREGUE`, `FALHA_TEMPORARIA`, `FALHA_FINAL` |
 | Exportação | `SOLICITADA`, `PROCESSANDO`, `DISPONIVEL`, `FALHA`, `EXPIRADA`, `EXCLUIDA` |
 
-Os estados são candidatos iniciais. A API solicita comandos, não um estado arbitrário; transições são executadas pelo domínio e auditadas.
+Os estados de exportação pertencem a uma expansão futura. A API solicita ações, não um estado arbitrário; as mudanças de estado são executadas pelas regras de negócio e registradas no histórico. A espera progressiva de login fica em controle separado e não transforma o usuário em `BLOQUEADO`.
 
 ## 11. Classificação, titular, finalidade e base legal
 
@@ -1014,32 +1174,36 @@ Os estados são candidatos iniciais. A API solicita comandos, não um estado arb
 | Identidade e contato | Aluno, responsável, professor ou administrador | Cadastro, autenticação, atendimento e comunicação | Pessoal/Restrito | **Pendente de validação pelo controlador/encarregado** |
 | Credencial, sessão e recuperação | Usuário | Controle seguro de acesso | Restrito | Pendente de validação formal |
 | Vínculo de responsável e menor | Aluno e responsável | Representação, comunicação e proteção do menor | Pessoal/Restrito | Pendente; exige análise reforçada |
+| Ficha e informações de saúde | Aluno | Segurança e adaptação da prática esportiva | Sensível/Restrito | Pendente de validação institucional antes da implantação real |
 | Inscrição, seleção e espera | Aluno | Gestão de vagas e participação | Pessoal/Confidencial | Pendente de validação formal |
 | Frequência e chamada | Aluno e professor | Acompanhamento esportivo e operacional | Pessoal/Confidencial | Pendente de validação formal |
 | Justificativa e comprovante | Aluno | Análise da ausência | Potencialmente Sensível/Restrito | Pendente; avaliação de necessidade e proporcionalidade obrigatória |
-| Notificação e entrega | Usuário/responsável | Avisos operacionais e eventos do serviço | Pessoal/Confidencial | Pendente, inclusive regras do WhatsApp |
+| Notificação e entrega | Usuário/responsável | Avisos operacionais e eventos do serviço | Pessoal/Confidencial | Pendente de validação institucional; WhatsApp é expansão futura |
 | Auditoria | Usuários e Secretaria | Segurança, responsabilização e investigação | Restrito | Pendente de validação formal |
 | Relatório/exportação | Conforme a fonte | Gestão, indicadores e prestação interna | Herda maior classificação | Pendente por relatório e finalidade |
 | Polos, modalidades e notícias publicadas | Secretaria/autores | Divulgação do serviço | Público após aprovação/publicação | Validar direitos, autoria e conteúdo |
 
-Este documento não escolhe base legal. A Secretaria, com apoio jurídico e do encarregado, deve registrar finalidade, necessidade, base, compartilhamentos, direitos do titular e retenção antes da produção. Consentimento não deve ser adotado automaticamente quando não for a base adequada.
+Este documento acadêmico não escolhe a base legal definitiva. Antes do uso real, a Prefeitura deverá indicar suas áreas institucionais competentes e registrar finalidade, necessidade, base legal, compartilhamentos e direitos dos titulares. A equipe não possui encarregado oficial da Prefeitura; Heitor Leite é o responsável interno por segurança e privacidade durante o projeto. Consentimento não deve ser adotado automaticamente quando não for a base adequada.
 
 ## 12. Retenção, descarte e direitos do titular
 
-| Dado/objeto | Evento de início | Proposta de descarte | Situação |
+| Dado/objeto | Prazo inicial aprovado pela equipe | O que acontece ao final |
 | --- | --- | --- | --- |
-| Sessão | Criação/revogação/expiração | Tornar inutilizável imediatamente ao revogar/expirar; remover após janela operacional aprovada | Prazo pendente |
-| Token de recuperação | Criação/uso/expiração | Invalidar no uso ou expiração e remover após janela antifraude aprovada | Prazo pendente |
-| Tentativa de login/rate limit | Tentativa | Agregar ou excluir quando não necessária à segurança | Prazo pendente |
-| Cadastro e vínculos | Encerramento da relação | Manter somente pelo período administrativo/legal aprovado; depois anonimizar ou eliminar | Prazo pendente |
-| Inscrição, chamada e frequência | Encerramento do ciclo/turma | Preservar histórico necessário e eliminar identificadores quando a finalidade cessar | Prazo pendente |
-| Comprovante rejeitado | Rejeição/varredura | Excluir conteúdo da quarentena o mais cedo possível; guardar somente evidência mínima | Limite técnico pendente |
-| Comprovante aprovado | Decisão/encerramento | Excluir conteúdo ao fim do prazo aprovado; metadado deve indicar descarte sem chave reutilizável | Prazo pendente |
-| Notificação e entrega | Resultado final | Reter estado mínimo; eliminar destino/conteúdo quando deixarem de ser necessários | Prazo pendente |
-| Webhook bruto | Processamento | Não persistir corpo integral salvo necessidade aprovada; eliminar evidência transitória | Prazo pendente |
-| Exportação | Disponibilização | Expirar automaticamente e excluir conteúdo; reexportar a partir da fonte autorizada | Prazo pendente |
-| Auditoria | Ocorrência | Retenção protegida conforme risco e obrigação; anonimização quando compatível | Prazo pendente |
-| Backup | Criação | Expirar por rotação; exclusão lógica chega aos backups por ciclo documentado | RPO/RTO e janela pendentes |
+| Sessão | Até 30 dias após a revogação ou expiração | Tornar inutilizável imediatamente ao revogar/expirar e remover fisicamente ao final do prazo |
+| Token de recuperação | Até 30 dias após o uso ou a expiração | Invalidar no primeiro uso ou na expiração e remover fisicamente ao final do prazo |
+| Tentativa de login e limite de requisições | 90 dias após o evento detalhado | Excluir o detalhe operacional; o evento resumido de segurança permanece na auditoria quando aplicável |
+| Conta e perfil | Conta ativa e 5 anos após a inativação | Excluir ou anonimizar o que não tiver obrigação institucional de preservação |
+| Inscrição, chamada e frequência | 5 anos após o encerramento do vínculo ou registro | Excluir ou anonimizar, preservando somente estatísticas que não identifiquem a pessoa |
+| Ficha e informações de saúde | Vínculo ativo e 1 ano após o encerramento | Excluir com segurança os dados e arquivos associados |
+| Dados do responsável legal | Até o aluno completar 18 anos e por mais 1 ano | Desativar aos 18 anos e depois excluir ou anonimizar o histórico sem necessidade de preservação |
+| Comprovante de justificativa | 1 ano após a decisão final | Excluir o arquivo e manter somente o registro mínimo da decisão quando necessário |
+| Notificação e tentativa de entrega | Até 1 ano após o envio | Permitir exclusão do conteúdo pelo usuário a qualquer momento; ao final, preservar somente o registro técnico mínimo necessário |
+| Webhook bruto | Apenas durante o processamento necessário | Não guardar o corpo integral sem necessidade aprovada e eliminar a evidência transitória |
+| Arquivo de relatório/exportação | 24 horas após a geração, quando o recurso futuro existir | Excluir automaticamente; uma nova solicitação gera outro arquivo autorizado |
+| Auditoria | 5 anos após o evento | Excluir com segurança quando não houver investigação ou obrigação de preservação |
+| Cópia de segurança | 30 dias após a criação | Expirar e eliminar automaticamente conforme a rotação |
+
+Após esses prazos, dados pessoais e arquivos desnecessários serão eliminados ou anonimizados. Estatísticas poderão ser preservadas somente quando a anonimização for irreversível e não permitir identificar novamente o titular. Os prazos são uma política acadêmica inicial e deverão ser homologados pelas áreas institucionais da Prefeitura antes da implantação real.
 
 Requisição de acesso, correção, anonimização ou exclusão deve:
 
@@ -1056,7 +1220,10 @@ Requisição de acesso, correção, anonimização ou exclusão deve:
 - Banco, volumes, backups e armazenamento de arquivos usam criptografia em repouso gerenciada por infraestrutura aprovada.
 - Senhas usam algoritmo de hash apropriado para senha e parâmetros versionados; não usam criptografia reversível.
 - Tokens e identificadores de sessão são armazenados somente como hash quando tecnicamente aplicável.
-- CPF, e-mail, telefone, endereço, destino de mensagem e IP exigem avaliação de criptografia por campo/tokenização conforme modelo de ameaça. Índices não justificam exposição em logs.
+- CPF, e-mails, telefones e contatos de emergência são criptografados por campo. CPF e e-mail recebem também hashes normalizados separados para pesquisa e prevenção de duplicidade. Destino de mensagem e IP recebem proteção compatível com o risco e nunca são expostos em logs.
+- Nome e data de nascimento permanecem disponíveis para pesquisa autorizada e cálculo de idade, sem criptografia individual. Eles continuam protegidos pela criptografia do banco em repouso, controle de acesso, consultas autorizadas e proibição de exposição em logs.
+- A ficha de saúde usa criptografia por campo. A auditoria registra quem acessou ou alterou a ficha, mas não copia o conteúdo médico.
+- O método, o cofre e o ciclo de vida das chaves serão alinhados com a infraestrutura fornecida pela Prefeitura e pela Embrass antes da implantação.
 - Chaves de criptografia, credenciais do banco e segredo do webhook ficam em cofre aprovado; nunca em Git, `.env` versionado, documentação, frontend ou tabela de configuração comum.
 - Rotação de chave deve prever leitura com versão anterior e recriptografia controlada, sem indisponibilizar registros históricos.
 - Hash de integridade de arquivo não substitui varredura antimalware nem autorização de download.
@@ -1073,7 +1240,7 @@ Requisição de acesso, correção, anonimização ou exclusão deve:
 
 Regras obrigatórias:
 
-- a aplicação não usa `root`, `postgres`, `sa` ou equivalente;
+- a aplicação não usa `root` nem outra conta administrativa equivalente;
 - banco e storage não possuem endpoint público;
 - administradores funcionais do SIDESP não recebem acesso SQL;
 - acesso humano é nominal, temporário, com MFA quando suportado, justificativa e auditoria;
@@ -1096,6 +1263,8 @@ O modelo atual é de uma única Secretaria e, portanto, não possui `tenant_id`.
 
 ## 15. Migrações, rollback e seeds
 
+- O Flyway será a ferramenta oficial de alteração controlada do banco. Uma migração é um arquivo SQL versionado que o Flyway aplica uma única vez e registra em histórico próprio.
+- Migrações versionadas seguem o formato `V001__descricao_curta.sql`, sempre com três dígitos no número inicial; migrações repetíveis, se necessárias, seguem o padrão próprio do Flyway e exigem justificativa.
 - Migrações devem ser versionadas, revisadas e executadas por conta separada da aplicação.
 - Script aplicado em ambiente compartilhado não é alterado; correções recebem nova versão.
 - Mudanças destrutivas seguem expansão e contração: adicionar estrutura compatível, migrar/verificar dados, mudar aplicação e somente depois remover o legado.
@@ -1105,12 +1274,14 @@ O modelo atual é de uma única Secretaria e, portanto, não possui `tenant_id`.
 - Migrações devem ser testadas em cópia representativa, recuperável, minimizada e sem dados reais desnecessários.
 - Seeds contêm somente dados sintéticos e claramente fictícios. Não incluir CPF, telefone, e-mail, token, arquivo ou credencial real.
 - Catálogos de papel/permissão podem ser seed técnico idempotente; atribuição de administrador inicial ocorre por procedimento seguro e auditado, não por senha fixa no script.
+- A migração cria somente os papéis e permissões, nunca uma senha padrão. A primeira conta de administrador total é criada por procedimento separado com e-mail confirmado, link de uso único, definição de senha, MFA obrigatório no primeiro acesso e auditoria completa.
+- No ambiente acadêmico, Heitor Leite executa esse procedimento. Na implantação real, o responsável e o canal seguro serão formalizados com Prefeitura e Embrass.
 
 ## 16. Backup, restauração e continuidade
 
 - Banco e arquivos precisam de backup coordenado ou mecanismo que permita reconciliar metadado e objeto.
 - Backups são criptografados, imutáveis durante a janela aprovada e separados das credenciais da aplicação.
-- RPO, RTO, frequência, retenção, região e responsáveis estão pendentes em `Q-016`.
+- A política inicial usa backup diário, RPO de 24 horas, RTO de 8 horas e retenção de 30 dias. Prefeitura e Embrass fornecerão e operarão a infraestrutura, mas responsabilidades, região, horários e evidências de restauração deverão ser formalizados antes da implantação.
 - Teste de restauração deve ocorrer periodicamente em ambiente isolado, com evidência de duração, integridade, quantidade de registros e acesso aos arquivos.
 - O teste deve conferir ao menos usuários, turmas, inscrições, chamadas, justificativas, outbox, auditoria e objetos privados.
 - Falha parcial entre banco e storage exige reconciliação; não se deve marcar arquivo como disponível antes de confirmar gravação e hash.
@@ -1131,6 +1302,8 @@ O modelo atual é de uma única Secretaria e, portanto, não possui `tenant_id`.
 - ação operacional no banco ou rotina de descarte.
 
 A auditoria registra ator, ação, alvo, instante, resultado, correlação e motivo quando necessário. Não registra senha, token, corpo integral de comprovante, conteúdo sensível da mensagem ou snapshot excessivo. Acesso à própria auditoria também deve ser auditado.
+
+Os registros de auditoria são somente de inclusão. A conta comum `sidesp_app` não recebe `UPDATE` nem `DELETE` nessa tabela. Depois da retenção de cinco anos, uma rotina administrativa separada, autorizada e também auditada poderá eliminar registros que não estejam sujeitos a investigação ou obrigação de preservação.
 
 Métricas técnicas usam identificadores de baixa sensibilidade e agregação. Trace distribuído não deve carregar CPF, e-mail, telefone, conteúdo de aula, justificativa ou parâmetros de relatório pessoais.
 
@@ -1158,34 +1331,24 @@ Métricas técnicas usam identificadores de baixa sensibilidade e agregação. T
 | Relatórios e exportações | `RF-REL-001`, `RF-REL-002`, `RF-REL-003`, `RNF-PRI-003`, `RNF-EXP-001` | `UC-REL-*` | Fluxo 10 de atividades; fluxo 6 de classes |
 | Incidente e continuidade | RNFs de segurança, privacidade, disponibilidade e recuperação | Processo operacional | Fluxo 11 de atividades; `../docs/SEGURANCA.md` |
 
-## 20. Pendências bloqueadoras
+## 20. Validações externas antes da implantação real
 
-| ID | Decisão necessária | Impacto no modelo |
+Não existem decisões técnicas acadêmicas em aberto neste documento. Os itens abaixo não impedem a revisão e aprovação do modelo pela equipe, mas precisam ser confirmados com as áreas competentes antes do uso de dados reais da Prefeitura.
+
+| Item | Validação necessária | Impacto |
 | --- | --- | --- |
-| `Q-001`/`Q-005` | Compatibilizar limite, segunda/terceira falta, justificativa pendente e correção | `regras_modalidade`, `apuracoes_faltas`, cancelamentos e notificações |
-| `Q-002` | Definir duas modalidades, simultaneidade e conflito de horários | Índice/regra de inscrições ativas e elegibilidade |
-| `Q-003` | Prazo de oferta e canal alternativo | `ofertas_vaga.expira_em`, jobs e notificações |
-| `Q-004` | Data de referência da idade | Consulta de `regras_modalidade` e elegibilidade |
-| `Q-006` | Escopo e dupla aprovação da exceção | `excecoes_inscricao` e segregação de funções |
-| `Q-007`/`Q-008` | Dados de saúde, menores e comprovação de responsável | Campos ainda não modelados e acesso a vínculos |
-| `Q-009`/`Q-017` | Fornecedor, base, templates e obrigatoriedade do WhatsApp | Destino protegido, callbacks, retenção e fallback |
-| `Q-010`/`Q-011` | Política de senha/sessão/MFA e matriz de permissões | Credenciais, sessões, papéis, índices e seeds |
-| `Q-012` | Estados e critérios do processo seletivo | Candidaturas, transições e documentos futuros |
-| `Q-013`/`Q-014` | Fórmulas, campos, granularidade e limiar | Indicadores, agregações, mapas e exportações |
-| `Q-015`/`Q-016` | Retenção, volumes, limites, RPO e RTO | Particionamento, índices, arquivos, backups e descarte |
-| `Q-018` | Operação offline/parcial da chamada | Versões, comandos de sincronização e conflitos |
-| `Q-020`/`Q-021` | Professores substitutos e reentrada na fila | Unicidade/vigência dos vínculos e entradas de espera |
-| Nova | Aprovar PostgreSQL, storage, Flyway e estratégia de sessão | Tipos físicos, extensões, migrações e infraestrutura |
-| Nova | Aprovar base legal, direitos e prazos por categoria | Retenção, anonimização, acesso e compartilhamento |
+| Base legal e privacidade | Prefeitura deve definir responsáveis institucionais e validar bases legais, direitos e prazos acadêmicos de retenção | Tratamento, anonimização e compartilhamentos |
+| Infraestrutura | Prefeitura e Embrass devem homologar versão exata do MySQL, armazenamento de arquivos, chaves, região e operação | Configuração física e continuidade |
+| Capacidade | Volumes reais de usuários, turmas, chamadas e arquivos devem ser medidos antes da produção | Ajuste de índices, limites e armazenamento |
 
 ## 21. Critérios de aprovação
 
-- [ ] Vocabulário, entidades e cardinalidades foram validados pela Secretaria.
-- [ ] PostgreSQL e componentes de armazenamento foram aprovados na arquitetura.
+- [ ] Vocabulário, entidades e cardinalidades foram validados pela equipe e apresentados ao cliente.
+- [ ] MySQL 8.x e componentes de armazenamento foram aprovados na arquitetura.
 - [ ] Estados e transições possuem regras testáveis.
 - [ ] Matriz de papéis e permissões foi aprovada.
 - [ ] Concorrência de vaga, fila, oferta, chamada e idempotência foi revisada pelo backend.
-- [ ] Dados pessoais, menores e comprovantes foram revisados pelo controlador/encarregado.
+- [ ] Dados pessoais, menores e comprovantes foram revisados internamente por Heitor Leite; validação institucional será exigida antes da implantação real.
 - [ ] Base legal, finalidade, retenção e descarte foram definidos por categoria.
 - [ ] Índices e constraints foram revisados com volumes representativos.
 - [ ] Estratégia de migração e rollback foi testada.
@@ -1199,3 +1362,4 @@ Métricas técnicas usam identificadores de baixa sensibilidade e agregação. T
 | Versão | Data | Alteração | Autor |
 | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Modelo lógico inicial, DER modular, dicionário, constraints, índices, classificação e operação segura | Heitor Leite |
+| `0.2.0` | 17/08/2026 | Decisões técnicas resolvidas: MySQL/Flyway, identidade, saúde, inscrições, seleção, frequência, segurança, retenção, concorrência e primeiro administrador; documento pronto para revisão | Heitor Leite |

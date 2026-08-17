@@ -9,28 +9,28 @@
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
 | Órgão demandante | Secretaria de Esportes de Guaratinguetá |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.1.0`; `CASOS_DE_USO.md` `0.1.0` |
-| Responsável de negócio | Secretaria de Esportes — representante nominal pendente |
-| Responsável técnico | Heitor Leite — Tech Lead |
-| Responsável por segurança | **Pendente de designação** |
-| Controlador dos dados | **Pendente de confirmação formal pela Prefeitura/Secretaria** |
-| Encarregado/Privacidade | **Pendente de identificação e contato** |
-| Versão | `0.1.0` |
-| Data de elaboração e pesquisa | 12/08/2026 |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `ATIVIDADES.md`, `ARQUITETURA.md` e `../database/BANCO_DE_DADOS.md`, todos em `0.2.0` |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| QA | Micael Phillipini |
+| Responsáveis institucionais | Prefeitura deverá indicar controlador, encarregado, jurídico e contatos antes da implantação real |
+| Versão | `0.2.0` |
+| Data de elaboração e pesquisa | 17/08/2026 |
 | Classificação | Interna |
-| Status | Rascunho — não aprovado |
+| Status | **Pronto para revisão — ainda não aprovado para implementação** |
 | Frequência de revisão | A cada 6 meses e sempre que ocorrer um gatilho da seção 37 |
-| Próxima revisão | Após definição de arquitetura, controlador, encarregado, matriz de permissões e fornecedores |
+| Próxima revisão | Até 17/02/2027, ou antes se ocorrer um gatilho da seção 37 |
 
 ## Aprovações
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Responsável de negócio | Pendente | Não aprovado | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente de revisão | — |
+| Product Owner | Livia Andrade | Pendente de revisão | — |
 | Responsável técnico | Heitor Leite | Pendente de revisão | — |
-| Segurança | Pendente | Não avaliado | — |
-| Privacidade/Encarregado | Pendente | Não avaliado | — |
-| Operações/Infraestrutura | Pendente | Não avaliado | — |
+| Segurança e privacidade interna | Heitor Leite | Pendente de revisão | — |
+| Operações/Infraestrutura | Prefeitura/Embrass | Alinhamento futuro | — |
 | QA | Micael Phillipini | Pendente de revisão dos testes | — |
 
 ## 1. Finalidade e escopo
@@ -41,16 +41,16 @@ Aplica-se a:
 
 - frontend web e recursos entregues ao navegador;
 - API Java/Spring Boot e processos em segundo plano;
-- banco de dados, cache, filas e armazenamento de arquivos, quando adotados;
-- cadastros, inscrições, chamadas, justificativas, relatórios e mapas;
+- MySQL, sessões, outbox, worker e armazenamento privado de arquivos;
+- cadastros, inscrições, chamadas, justificativas e notificações da primeira versão;
 - autenticação, autorização, sessões e recuperação de conta;
-- integrações com WhatsApp, mapas, e-mail e futuros fornecedores;
+- integração de e-mail; WhatsApp, mapas, relatórios e exportações são expansões futuras;
 - estações e contas administrativas utilizadas para desenvolver ou operar o produto;
 - repositórios, dependências, pipeline, artefatos, containers e infraestrutura;
 - logs, auditoria, backup, continuidade e resposta a incidentes;
 - pessoas, fornecedores, IAs e agentes automatizados que tenham acesso ao projeto.
 
-Este documento não substitui análise jurídica, decisão do controlador, avaliação do encarregado, modelo de ameaças detalhado, teste de invasão autorizado, política corporativa ou resposta a incidentes própria. Quando houver conflito, prevalece a hierarquia da seção 2.
+Este documento não substitui análise jurídica, decisão institucional da Prefeitura, modelo de ameaças detalhado, teste de invasão autorizado, política corporativa ou resposta a incidentes própria. O grupo acadêmico não possui encarregado oficial da Prefeitura; Heitor Leite responde internamente por segurança e privacidade durante o projeto.
 
 ## 2. Hierarquia normativa e convenções
 
@@ -75,7 +75,36 @@ Pessoa desenvolvedora, fornecedor ou IA **NÃO PODE** aprovar exceção, definir
 - **Pendente:** controle que depende de responsável, valor, fornecedor ou decisão externa.
 - **Bloqueador:** condição que impede desenvolvimento do fluxo afetado, integração ou produção.
 
-### 2.3 Identificadores
+### 2.3 Glossário técnico
+
+| Termo | Significado no projeto |
+| --- | --- |
+| API | Meio pelo qual o frontend Angular conversa com o backend Spring Boot. |
+| Autenticação | Verificação de quem está tentando entrar no sistema. |
+| Autorização | Verificação do que a pessoa autenticada pode consultar ou fazer. |
+| MFA | Segunda verificação além da senha. No SIDESP, o administrador informa um código enviado ao e-mail em todos os logins. |
+| Sessão opaca | Código aleatório que identifica uma sessão mantida no servidor, sem carregar dados do usuário no próprio código. |
+| Cookie seguro | Pequeno dado enviado pelo navegador com proteções que dificultam leitura por scripts e envio indevido. |
+| CSRF | Ataque que tenta usar uma sessão já aberta para executar uma ação sem a intenção do usuário. |
+| XSS | Injeção de conteúdo malicioso que pode executar no navegador de outra pessoa. |
+| Rate limit | Limite de requisições em certo período para evitar abuso ou sobrecarga. |
+| Hash de senha | Transformação de mão única usada para verificar a senha sem armazená-la em texto legível. |
+| Salt | Valor aleatório e exclusivo somado à senha antes do hash para dificultar ataques com listas prontas. |
+| Step-up | Nova confirmação de identidade exigida imediatamente antes de uma ação de maior risco. |
+| Menor privilégio | Conceder a cada conta somente os acessos necessários para sua função. |
+| SAST | Análise automática do código-fonte para encontrar possíveis falhas de segurança. |
+| SCA | Análise das bibliotecas usadas pelo projeto e das vulnerabilidades conhecidas nelas. |
+| SBOM | Lista das bibliotecas e componentes incluídos em uma versão do sistema. |
+| CSP | Regra do navegador que restringe as origens de scripts e outros conteúdos da página. |
+| HSTS | Regra que obriga o navegador a usar HTTPS após sua ativação segura. |
+| IndexedDB | Banco local do navegador usado somente para o rascunho temporário e protegido da chamada offline. |
+| Storage S3 compatível | Armazenamento privado de arquivos que segue a interface do serviço S3. |
+| ClamAV | Ferramenta de verificação de arquivos contra conteúdo malicioso; pode ser substituída por equivalente homologado. |
+| Outbox | Registros de eventos salvos junto da operação principal para que um worker os processe depois sem perder a tarefa. |
+| Worker | Parte do backend que executa tarefas em segundo plano, como o envio de notificações. |
+| OpenTelemetry | Padrão para gerar métricas e rastros de execução sem prender o projeto a uma ferramenta específica. |
+
+### 2.4 Identificadores
 
 Os controles usam IDs estáveis no formato `SEG-<DOMÍNIO>-<NÚMERO>`. Código, testes, PRs, auditorias e exceções deverão citá-los quando aplicável.
 
@@ -99,14 +128,14 @@ Os controles usam IDs estáveis no formato `SEG-<DOMÍNIO>-<NÚMERO>`. Código, 
 | Papel | Responsabilidades mínimas |
 | --- | --- |
 | Responsável de negócio | Aprovar escopo, riscos residuais, disponibilidade, permissões e impacto operacional; não aprova matéria jurídica sozinho. |
-| Controlador dos dados | Definir finalidades, hipóteses legais, retenção, compartilhamentos, direitos e decisão regulatória sobre incidentes. |
-| Encarregado/Privacidade | Orientar LGPD, titulares, menores, saúde, fornecedores, transferência internacional e necessidade de RIPD. |
-| Responsável por segurança | Manter baseline, modelo de ameaças, exceções, vulnerabilidades, testes e incidentes. |
-| Tech Lead | Transformar controles em arquitetura, padrões de código, revisões e evidências técnicas. |
+| Responsável de negócio / Scrum Master — Kauãn Raphael | Coordenar o trabalho, avaliar impacto operacional e apoiar a comunicação de incidentes; não aprova matéria jurídica sozinho. |
+| Product Owner — Livia Andrade | Aprovar prioridades, regras de negócio e impactos do produto; apoiar decisões e comunicações que afetem os usuários. |
+| Responsável técnico, segurança e privacidade interna — Heitor Leite | Manter esta baseline, arquitetura de segurança, acessos, vulnerabilidades, exceções técnicas, testes e incidentes do projeto. |
 | Desenvolvimento backend | Aplicar autorização, validações, proteção de dados, auditoria, integrações e testes no servidor. |
 | Desenvolvimento frontend | Proteger sessão, saída, navegação, dependências, headers e ausência de segredo no bundle. |
-| QA | Manter matriz de testes de segurança e bloquear aceite quando critério obrigatório falhar. |
-| Operações/DevOps | Isolar ambientes, proteger pipeline/cofre, monitorar, fazer backup, restore, patching e rollback. |
+| QA — Micael Phillipini | Manter matriz de testes de segurança e bloquear aceite quando critério obrigatório falhar. |
+| Prefeitura/Embrass | Fornecer e operar a infraestrutura homologada, incluindo hospedagem, banco, armazenamento, backup, cofre, monitoramento e suporte, conforme responsabilidades que ainda serão formalizadas. |
+| Controlador, encarregado e jurídico institucionais | Definir hipóteses legais, direitos, comunicações regulatórias e demais decisões oficiais antes de eventual uso real. Esses papéis não pertencem ao grupo acadêmico. |
 | Administrador funcional | Operar apenas permissões concedidas; justificar ações críticas; nunca compartilhar conta. |
 | Fornecedor | Cumprir contrato, menor privilégio, segurança, incidentes, retenção, suboperadores e saída. |
 | IA/agente | Seguir `AGENTS.md`, não receber segredo/dado real, não aprovar risco e submeter produção a revisão humana. |
@@ -115,7 +144,7 @@ Os controles usam IDs estáveis no formato `SEG-<DOMÍNIO>-<NÚMERO>`. Código, 
 
 | ID | Controle obrigatório | Evidência esperada | Status |
 | --- | --- | --- | --- |
-| `SEG-GOV-011` | Responsável por segurança, controlador e encarregado DEVEM ser formalmente identificados antes de dados reais. | Registro de nome, contato e aprovação. | Pendente; bloqueador |
+| `SEG-GOV-011` | Heitor Leite é o responsável interno por segurança e privacidade do projeto. Controlador, encarregado, jurídico e contatos institucionais DEVEM ser indicados pela Prefeitura antes do uso de dados reais. | Registro dos responsáveis internos e, antes da implantação real, dos responsáveis institucionais. | Parcialmente definido; bloqueador apenas da implantação real |
 | `SEG-GOV-012` | Mudança de arquitetura, identidade, dado sensível, fornecedor ou exposição de rede DEVE passar por revisão de segurança. | Checklist/ADR e aprovação. | Proposto |
 | `SEG-GOV-013` | A equipe DEVE manter inventário de ativos, dados, dependências, contas e fornecedores. | Inventário versionado com proprietário. | Proposto |
 | `SEG-GOV-014` | Risco residual e exceção DEVEM ter proprietário, prazo e aprovação competente. | Registro conforme seção 34. | Proposto |
@@ -147,7 +176,7 @@ A versão de cada referência DEVE ser registrada na estratégia de testes. Atua
 
 | ID | Controle obrigatório | Evidência esperada | Status |
 | --- | --- | --- | --- |
-| `SEG-DAD-001` | Todo campo DEVE possuir classificação, finalidade, proprietário, acesso e retenção antes de produção. | Dicionário de dados aprovado. | Pendente; bloqueador de produção |
+| `SEG-DAD-001` | Todo campo DEVE possuir classificação, finalidade, responsável, acesso e retenção antes de produção. O inventário inicial está no levantamento de requisitos e no modelo de dados. | Dicionário de dados aprovado e validação institucional. | Definido para o projeto; validação institucional pendente |
 | `SEG-DAD-002` | Um conjunto ou arquivo herda a classe mais alta de seu conteúdo. | Classificação em catálogo e storage. | Proposto |
 | `SEG-DAD-003` | Dado pseudonimizado continua pessoal enquanto houver reidentificação razoável. | Método e avaliação documentados. | Proposto |
 | `SEG-DAD-004` | “Anonimizado” só PODE ser declarado após método, teste de reidentificação e aprovação. | Relatório de anonimização. | Proposto |
@@ -194,33 +223,33 @@ O futuro `MODELO_DE_AMEACAS.md` deverá aplicar metodologia formal, como STRIDE,
 
 ### 9.1 Arquitetura obrigatória
 
-Para aplicação web, a opção preferencial é sessão opaca mantida no servidor, identificada por cookie seguro. OAuth/OIDC ou JWT somente poderão ser adotados após decisão de arquitetura e modelo de ameaças; JWT assinado não deve ser tratado como sigiloso.
+O SIDESP usará sessão opaca mantida no servidor e persistida no MySQL, identificada no navegador por cookie seguro. Redis ou outro armazenamento dedicado só será avaliado se medições futuras demonstrarem necessidade. OAuth/OIDC ou JWT exigiriam nova decisão de arquitetura e revisão deste documento.
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
 | `SEG-IDN-001` | Login DEVE aceitar CPF ou e-mail sem revelar qual identificador existe. | Respostas e tempos não permitem enumeração prática. | Proposto |
 | `SEG-IDN-002` | CPF NÃO DEVE ser usado como senha, token, fator de recuperação ou prova suficiente de identidade. | Testes de recuperação e cadastro. | Proposto |
-| `SEG-IDN-003` | Senha DEVE ser armazenada somente com algoritmo de hash de senha aprovado, salt único e parâmetros calibrados. Preferir Argon2id; alternativa exige ADR. | Configuração, teste e revisão periódica. | Proposto |
-| `SEG-IDN-004` | Senha de fator único DEVE ter no mínimo 15 caracteres; com MFA, no mínimo 8; o sistema DEVE aceitar pelo menos 64 e não impor composição arbitrária. | Testes de limite e política. | Proposto, sujeito à política oficial |
-| `SEG-IDN-005` | Senhas comuns/comprometidas DEVEM ser bloqueadas sem enviar a senha completa a serviço externo. | Lista/serviço aprovado e teste. | Proposto |
+| `SEG-IDN-003` | Senha DEVE ser armazenada somente com Argon2id, salt único por senha e parâmetros calibrados no ambiente do projeto. Bcrypt só poderá ser usado como alternativa mediante ADR que justifique a necessidade e defina parâmetros seguros. | Configuração, teste de desempenho e revisão periódica. | Definido |
+| `SEG-IDN-004` | Senha DEVE possuir de 8 a 64 caracteres, pelo menos uma letra maiúscula e um número. Letras minúsculas e símbolos são permitidos, mas não obrigatórios. | Testes de tamanho, composição e caracteres permitidos. | Definido |
+| `SEG-IDN-005` | Senha comum ou fraca DEVE gerar aviso claro, sem impedir o cadastro somente por esse motivo. A senha completa NÃO DEVE ser enviada a serviço externo. | Lista ou verificação local aprovada e teste do aviso. | Definido |
 | `SEG-IDN-006` | Colagem e gerenciadores de senha DEVEM ser permitidos; troca periódica NÃO DEVE ser exigida sem evidência de comprometimento. | Teste de interface e política. | Proposto |
-| `SEG-IDN-007` | Administradores DEVEM usar MFA. Preferir WebAuthn/passkeys; TOTP pode ser fallback aprovado. SMS/WhatsApp não deve ser único fator administrativo. | Testes de ativação, recuperação e bypass. | Proposto; solução pendente |
-| `SEG-IDN-008` | Ações críticas DEVEM exigir autenticação recente ou step-up: mudança de permissão, exceção de inscrição, exportação sensível, troca de MFA/contato e acesso administrativo de alto impacto. | Política e teste de reautenticação. | Proposto |
-| `SEG-IDN-009` | Recuperação DEVE usar token aleatório, opaco, de uso único, curta duração e entregue por canal previamente verificado. | Token armazenado protegido, expiração e replay testados. | Proposto |
-| `SEG-IDN-010` | Recuperação DEVE invalidar token após uso e revogar sessões quando o risco exigir. Pergunta de segurança é PROIBIDA. | Testes de reutilização e sessão. | Proposto |
+| `SEG-IDN-007` | Administradores DEVEM usar MFA por código enviado ao e-mail confirmado em todos os logins. O código vale 10 minutos e admite 5 tentativas; o reenvio espera 60 segundos, permite no máximo 5 envios por hora e invalida o código anterior. | Testes de expiração, tentativas, reenvio, invalidação, replay e bypass. | Definido |
+| `SEG-IDN-008` | Criar ou inativar administrador, conceder ou remover permissão, executar exceção administrativa de inscrição, trocar manualmente o e-mail perdido e executar exclusão com dado sensível DEVEM exigir novamente a senha do administrador e um novo código MFA por e-mail. A confirmação vale por 10 minutos somente na sessão atual. | Testes de senha incorreta, MFA, expiração, troca de sessão e auditoria. | Definido |
+| `SEG-IDN-009` | Recuperação DEVE usar link aleatório, opaco, válido por 30 minutos, de uso único e enviado exclusivamente ao e-mail confirmado. A resposta não pode revelar se a conta existe. | Token armazenado protegido, expiração, resposta genérica e replay testados. | Definido |
+| `SEG-IDN-010` | Recuperação concluída DEVE invalidar o link e revogar todas as sessões. Alteração normal de senha mantém apenas a sessão atual; logout revoga somente a sessão usada. Pergunta de segurança é PROIBIDA. | Testes de reutilização, revogação e manutenção apenas da sessão permitida. | Definido |
 | `SEG-IDN-011` | Conta inativa, desligada ou com papel removido DEVE perder acesso e sessões relevantes imediatamente ou dentro do SLA aprovado. | Teste de revogação e auditoria. | Proposto |
 | `SEG-IDN-012` | Contas de serviço DEVEM ser distintas de pessoas, sem login interativo e com credenciais curtas/dinâmicas quando viável. | Inventário e configuração. | Proposto |
 
 ### 9.2 Limites iniciais contra abuso
 
-Os valores abaixo são uma baseline **proposta**, a ser ajustada por teste de carga, risco e realidade de redes compartilhadas. IP nunca será o único sinal.
+Os limites combinam proteção da API com espera progressiva no login. Eles poderão ser reduzidos se testes ou incidentes mostrarem risco, mas aumentos exigem análise de capacidade e segurança. IP nunca será o único sinal para identificar abuso.
 
-| Fluxo | Limite inicial proposto | Resposta e observação |
+| Fluxo | Limite inicial definido | Resposta e observação |
 | --- | --- | --- |
-| Login | 5 falhas por conta e 20 por IP em 15 minutos | Atraso progressivo, `429` quando aplicável, alerta por anomalia; evitar bloqueio permanente explorável para DoS |
-| Recuperação | 3 solicitações por conta e 10 por IP por hora | Resposta sempre genérica; no máximo um token ativo por propósito |
-| Cadastro | 5 tentativas por IP por hora, com proteção adicional adaptativa | Considerar redes compartilhadas dos polos; não coletar biometria/CAPTCHA invasivo sem avaliação |
-| MFA/OTP | 5 tentativas por desafio | Invalidar desafio e exigir novo fluxo; impedir replay |
+| Login | 10 requisições por minuto, combinando IP e identificador | A partir da 3ª senha inválida, aplicar esperas de 30 segundos, 1, 2 e 5 minutos, crescendo até o máximo de 15 minutos; não bloquear permanentemente a conta |
+| Recuperação | 10 requisições por minuto, combinando IP e identificador | Resposta sempre genérica; novo link invalida o anterior para a mesma finalidade |
+| Cadastro | 10 requisições por minuto, combinando IP e identificador disponível | Considerar redes compartilhadas dos polos e não usar biometria ou CAPTCHA invasivo sem avaliação |
+| MFA por e-mail | 5 tentativas por código; 5 envios por hora e intervalo de 60 segundos | Código válido por 10 minutos; reenvio invalida o anterior e replay é impedido |
 
 ## 10. Sessão, cookies, CSRF e logout
 
@@ -234,29 +263,29 @@ Os valores abaixo são uma baseline **proposta**, a ser ajustada por teste de ca
 | `SEG-SES-006` | Mudança de papel, desativação, recuperação e incidente DEVEM permitir revogação das sessões afetadas. | Teste e função operacional. | Proposto |
 | `SEG-SES-007` | Operações mutáveis autenticadas por cookie DEVEM possuir proteção CSRF. `SameSite` sozinho não é suficiente. | Token/padrão aprovado e testes CSRF. | Proposto |
 | `SEG-SES-008` | A aplicação NÃO DEVE aceitar credencial ou sessão por query string, fragmento ou corpo de log. | Testes e varredura. | Proposto |
+| `SEG-SES-009` | Cada conta administrativa PODE manter somente uma sessão ativa; novo login encerra a sessão anterior daquela conta. Contas administrativas diferentes PODEM estar conectadas simultaneamente. Alunos e professores podem manter até 3 sessões; a quarta encerra a mais antiga. | Testes com contas distintas, novo login e limite por conta. | Definido |
 
-### 10.1 Tempos iniciais propostos
+### 10.1 Tempos definidos
 
 | Perfil | Inatividade | Duração absoluta | Reautenticação de ação crítica |
 | --- | --- | --- | --- |
-| Administrador | 15 minutos | 8 horas | Autenticação nos últimos 10 minutos e MFA válido |
-| Professor | 30 minutos | 12 horas | 15 minutos para ação crítica, se houver |
-| Aluno | 30 minutos | 24 horas | 15 minutos para troca de contato/senha |
+| Administrador | 15 minutos | 8 horas | Nova senha e novo MFA; confirmação válida por 10 minutos |
+| Professor e aluno | 30 minutos | 24 horas | Senha atual para alteração normal de senha ou e-mail |
 
-Os valores dependem de aprovação de segurança/negócio e devem considerar uso em dispositivos compartilhados. “Lembrar-me” não poderá criar sessão ilimitada.
+Não haverá opção “manter conectado” na primeira versão. O rascunho offline da chamada no IndexedDB não é uma sessão nem uma credencial e segue as regras específicas da seção 15.
 
 ## 11. Autorização e segregação de funções
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
 | `SEG-AUTZ-001` | Toda operação não pública DEVE validar autorização no backend; guard, rota ou botão do frontend não é controle suficiente. | Testes por endpoint/serviço. | Proposto |
-| `SEG-AUTZ-002` | A matriz de papéis e permissões DEVE definir aluno, professor, administrador parcial, administrador total, gestor, suporte, segurança e serviço. | Matriz aprovada e versionada. | Pendente; bloqueador |
+| `SEG-AUTZ-002` | A matriz DEVE definir aluno, professor, administrador parcial e administrador total. Permissões técnicas de serviço e operação DEVEM ser separadas das contas funcionais. | Matriz aprovada no levantamento de requisitos e testes por papel. | Definido |
 | `SEG-AUTZ-003` | Autorização DEVE verificar ação, objeto e contexto: aluno próprio; professor vinculado à turma e vigência; administrador com permissão explícita. | Testes BOLA/IDOR e de vínculo. | Proposto |
 | `SEG-AUTZ-004` | Identificador fornecido pelo cliente NÃO DEVE substituir a identidade/vínculo derivado da sessão. | Revisão de código e teste horizontal. | Proposto |
 | `SEG-AUTZ-005` | Autoelevação e concessão acima do poder do concedente são PROIBIDAS. Mudança de permissão DEVE ser auditada e revogar sessão quando necessário. | Testes verticais e auditoria. | Proposto |
 | `SEG-AUTZ-006` | Professor NÃO DEVE analisar justificativa nem corrigir chamada salva. | Testes de `UC-ADM-09/10`. | Proposto |
-| `SEG-AUTZ-007` | Dados de saúde e comprovantes DEVEM possuir permissão separada dos demais dados do aluno. | Teste de campo/objeto e logs de acesso. | Pendente; bloqueador do fluxo sensível |
-| `SEG-AUTZ-008` | Exportação, mapa de calor, ações em massa, exceção de inscrição e gestão de administradores DEVEM ter permissões próprias. | Matriz e testes. | Proposto |
+| `SEG-AUTZ-007` | Dados de saúde e comprovantes DEVEM possuir permissões separadas. Administrador total, administrador parcial com permissão compatível e professor da turma consultam a ficha de saúde; comprovantes ficam com o próprio aluno e o administrador autorizado, nunca com o professor. | Testes de campo, vínculo, objeto e logs de acesso. | Definido para o projeto; validação institucional pendente |
+| `SEG-AUTZ-008` | Ações em massa, exceção de inscrição e gestão de administradores DEVEM ter permissões próprias. Relatórios, exportações e mapa de calor serão definidos apenas quando entrarem no escopo de versão futura. | Matriz e testes do escopo implementado. | Definido para a primeira versão |
 | `SEG-AUTZ-009` | Jobs, filas, webhooks e consumidores DEVEM autenticar o serviço e aplicar o mesmo limite de negócio dos endpoints. | Testes de serviço e configuração. | Proposto |
 | `SEG-AUTZ-010` | Acesso privilegiado DEVE ser revisado pelo menos trimestralmente e após mudança de função, desligamento ou incidente. | Relatório de revisão e revogação. | Proposto |
 
@@ -269,9 +298,9 @@ Os valores dependem de aprovação de segurança/negócio e devem considerar uso
 | `SEG-API-001` | Toda rota DEVE constar do OpenAPI versionado ou de registro explícito de exceção; endpoints antigos DEVEM ser desativados ou protegidos. | Diferença contrato/rotas e inventário. | Proposto |
 | `SEG-API-002` | API DEVE aceitar somente métodos, `Content-Type`, campos e tamanhos previstos; campos desconhecidos críticos DEVEM ser rejeitados. | Testes negativos de contrato. | Proposto |
 | `SEG-API-003` | DTOs de entrada/saída DEVEM usar allowlist e impedir mass assignment de papel, dono, estado, auditoria e campos internos. | Revisão e teste de propriedade. | Proposto |
-| `SEG-API-004` | Paginação, filtros, ordenação, profundidade e tamanho de resposta DEVEM possuir limites máximos. | Testes de consumo de recurso. | Proposto; valores pendentes |
+| `SEG-API-004` | Listagens DEVEM retornar 20 registros por padrão e no máximo 100 por página. Corpo JSON aceita até 1 MB, sem contar uploads; pesquisa textual aceita até 200 caracteres e operação em lote, até 100 itens. Filtros, ordenação, profundidade e tamanho da resposta também DEVEM ser limitados pelo contrato. | Testes de borda, paginação e consumo de recurso. | Definido |
 | `SEG-API-005` | Erros DEVEM usar formato consistente, código seguro e correlation ID; stack trace, SQL, caminho interno e segredo NÃO DEVEM chegar ao cliente. | Testes de erro em produção. | Proposto |
-| `SEG-API-006` | Requisições DEVEM ter rate limiting por usuário, credencial, IP, endpoint e risco, com `429` e `Retry-After` quando aplicável. | Teste de limite e observabilidade. | Proposto; limites finais pendentes |
+| `SEG-API-006` | Requisições DEVEM ter rate limiting por usuário, credencial, IP, endpoint e risco, com `429` e `Retry-After` quando aplicável. | Teste dos valores da seção 12.2 e observabilidade. | Definido inicialmente |
 | `SEG-API-007` | Fluxos sensíveis DEVEM ter proteção de negócio além do limite genérico: login, cadastro, recuperação, inscrição, fila, upload, exportação e mensagens. | Testes de automação/abuso. | Proposto |
 | `SEG-API-008` | Operações repetíveis com efeito crítico DEVEM ser idempotentes e transacionais. | Testes concorrentes e de replay. | Proposto |
 | `SEG-API-009` | CORS DEVE listar origens, métodos e headers exatos por ambiente; `*` com credenciais é PROIBIDO. | Testes de preflight/origem hostil. | Proposto |
@@ -279,16 +308,16 @@ Os valores dependem de aprovação de segurança/negócio e devem considerar uso
 | `SEG-API-011` | Console, Swagger interativo, debug, profiler e endpoint de administração DEVEM estar desabilitados publicamente em produção. | Varredura de superfície. | Proposto |
 | `SEG-API-012` | Requisições de saída DEVEM usar allowlist de destino, DNS/redirect controlado e bloqueio a redes internas/metadados para prevenir SSRF. | Testes SSRF e configuração de egress. | Proposto |
 
-### 12.2 Limites operacionais iniciais propostos
+### 12.2 Limites operacionais definidos inicialmente
 
 | Categoria | Limite inicial | Observação |
 | --- | --- | --- |
 | API pública de leitura | 60 requisições/minuto/IP | Cache e CDN podem ser usados sem ignorar origem confiável |
-| API autenticada comum | 120 requisições/minuto/usuário e limite complementar por IP | Ajustar por carga e perfil |
-| Inscrição/confirmação/cancelamento | 10 operações/minuto/usuário | Usar idempotency key/identificador de comando |
-| Upload | 10 tentativas/10 minutos/usuário | Somar limites de quantidade e tamanho |
-| Exportação | 5 solicitações/hora/gestor | Volume e concorrência também limitados |
-| Envio manual de aviso | 10 envios/hora/professor, por turma e risco | Prevenir spam; emergências exigem fluxo aprovado |
+| API autenticada comum | 100 requisições/minuto/usuário e limite complementar por IP | Ajustar somente com medição e análise de abuso |
+| Login, cadastro e recuperação | 10 requisições/minuto/IP e identificador | Somar a espera progressiva e respostas sem enumeração |
+| Upload | 10 requisições/minuto/usuário | Somar limites de quantidade, tipo e tamanho dos arquivos |
+| Operações críticas repetíveis | Limite específico no contrato, nunca superior ao limite autenticado comum | Usar chave de idempotência ou identificador de comando |
+| Exportação e envio em massa | Fora da primeira versão | Definir volume e concorrência antes da implementação futura |
 
 Limites devem ser configuráveis por ambiente, monitorados e validados por teste de carga. Aumento exige análise de capacidade e abuso.
 
@@ -309,21 +338,21 @@ Limites devem ser configuráveis por ambiente, monitorados e validados por teste
 
 ### 14.1 Upload de comprovantes
 
-Até que negócio, segurança e privacidade aprovem tipos, tamanho e retenção, o fluxo de upload permanece bloqueado para produção.
+O comprovante é opcional. Uma justificativa pode possuir de 0 a 3 arquivos PDF, JPG ou PNG, cada um com até 10 MB. O arquivo permanece em quarentena até a verificação contra conteúdo malicioso e nunca fica disponível por caminho público.
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-ARQ-001` | Tipos, extensões, MIME real, assinaturas, quantidade e tamanho DEVEM usar allowlist. | Política de upload e testes. | Pendente; bloqueador |
+| `SEG-ARQ-001` | Tipos, extensões, MIME real e assinatura DEVEM corresponder a PDF, JPG ou PNG. Cada justificativa aceita até 3 arquivos de no máximo 10 MB cada. | Testes de tipo verdadeiro, quantidade, tamanho e arquivo disfarçado. | Definido |
 | `SEG-ARQ-002` | Nome original NÃO DEVE definir o nome físico; usar identificador aleatório e preservar nome apenas como metadado sanitizado se necessário. | Inspeção do storage. | Proposto |
 | `SEG-ARQ-003` | Arquivo DEVE ser armazenado fora da raiz pública, em storage privado, sem permissão de execução e com acesso por objeto. | Teste de URL direta e configuração. | Proposto |
-| `SEG-ARQ-004` | Upload DEVE passar por validação de conteúdo e varredura antimalware/quarentena antes de ficar disponível ao administrador. | Pipeline de estado `recebido → quarentena → aprovado/rejeitado`. | Proposto; ferramenta pendente |
+| `SEG-ARQ-004` | Upload DEVE passar por validação e ClamAV antes de ficar disponível. Prefeitura/Embrass poderão homologar ferramenta equivalente sem remover quarentena, autorização ou auditoria. Indisponibilidade da ferramenta mantém o arquivo em quarentena. | Pipeline de estado `recebido → quarentena → aprovado/rejeitado`. | Definido |
 | `SEG-ARQ-005` | Arquivo comprimido, macro, conteúdo ativo e formato complexo DEVEM ser recusados por padrão, salvo necessidade e controle formal. | Testes com macro/zip bomb. | Proposto |
 | `SEG-ARQ-006` | Download DEVE revalidar papel, titular/objeto e finalidade; URL assinada, se usada, deve ser curta e não reutilizável além do necessário. | Testes de IDOR e expiração. | Proposto |
 | `SEG-ARQ-007` | Professor NÃO DEVE acessar comprovante de justificativa. | Teste de autorização. | Proposto |
-| `SEG-ARQ-008` | Arquivo rejeitado, temporário ou expirado DEVE ser descartado com rotina verificável; backups respeitam a retenção aprovada. | Job, relatório de descarte e restore. | Pendente: retenção |
+| `SEG-ARQ-008` | Arquivo rejeitado, temporário ou expirado DEVE ser descartado com rotina verificável; comprovantes seguem a retenção inicial de 1 ano após a decisão definitiva, salvo investigação ou obrigação institucional. Backups respeitam a mesma política. | Job, relatório de descarte e restore. | Definido para o projeto; validação institucional pendente |
 | `SEG-ARQ-009` | Respostas NÃO DEVEM expor caminho interno, nome físico, bucket, credencial ou stack trace. | Testes de erro/download. | Proposto |
 
-Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um arquivo por justificativa. Esses valores **não estão aprovados** e devem ser validados antes da implementação do fluxo.
+Os arquivos serão mantidos em storage privado compatível com S3. A infraestrutura poderá fornecer tecnologia equivalente, desde que conserve as mesmas garantias de acesso privado, quarentena, criptografia, retenção e auditoria.
 
 ### 14.2 Exportações
 
@@ -332,8 +361,8 @@ Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um a
 | `SEG-EXP-001` | Permissão para visualizar NÃO concede automaticamente permissão para exportar. | Matriz e testes. | Proposto |
 | `SEG-EXP-002` | Campos DEVEM ser selecionados no servidor por relatório e papel, sem aceitar lista arbitrária do cliente. | Teste de campo adicional. | Proposto |
 | `SEG-EXP-003` | Exportação DEVE registrar ator, tipo, filtros, volume, classificação, instante e resultado, sem copiar o conteúdo para o log. | Evento de auditoria. | Proposto |
-| `SEG-EXP-004` | Arquivo DEVE ser temporário, protegido, possuir expiração e ser removido após retenção aprovada. | Teste de expiração/descarte. | Pendente: prazo |
-| `SEG-EXP-005` | Relatório/mapa DEVE suprimir ou agrupar grupos abaixo do limiar de reidentificação aprovado. | Teste de filtros sucessivos. | Pendente; bloqueador analítico |
+| `SEG-EXP-004` | Quando a exportação futura for implementada, o arquivo DEVE ser temporário, protegido e removido automaticamente em até 24 horas. | Teste de expiração/descarte. | Definido para versão futura |
+| `SEG-EXP-005` | Relatório/mapa futuro DEVE suprimir ou agrupar grupos com menos de 3 pessoas e impedir filtros sucessivos que facilitem reidentificação. | Teste de filtros sucessivos. | Definido para versão futura; campos ainda dependem da Secretaria |
 | `SEG-EXP-006` | Excel/CSV DEVE impedir formula injection; PDF DEVE escapar conteúdo e não incorporar anexo/script ativo. | Testes de arquivo malicioso. | Proposto |
 | `SEG-EXP-007` | Exportações de grande volume DEVEM usar fila, limite de concorrência, timeout e notificação segura, sem manter sessão aberta indefinidamente. | Teste de carga e falha. | Proposto; volumes pendentes |
 
@@ -351,6 +380,8 @@ Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um a
 | `SEG-FE-008` | Source map de produção NÃO DEVE ser público quando expuser código/detalhe interno; upload a observabilidade deve ser autenticado e privado. | Varredura do deploy. | Proposto |
 | `SEG-FE-009` | Analytics NÃO DEVE receber CPF, saúde, documento, token, URL sensível ou conteúdo de formulário. | Inspeção de rede e configuração. | Proposto |
 | `SEG-FE-010` | Estado de autorização negada DEVE ser tratado sem depender de ocultação de UI; resposta `401/403` não pode vazar recurso. | Testes E2E e API. | Proposto |
+| `SEG-FE-011` | O rascunho offline da chamada DEVE usar IndexedDB criptografado e guardar somente identificadores mínimos, nomes necessários, presença, versão, horário e chave de idempotência. Saúde, contatos e credenciais são PROIBIDOS. | Inspeção do navegador, teste offline e teste de descarte. | Definido |
+| `SEG-FE-012` | O rascunho offline DEVE ser apagado após sincronização, logout ou 24 horas. Conflito com uma chamada já salva no servidor NÃO DEVE sobrescrever a versão do servidor automaticamente. | Testes de sincronização, expiração, logout e conflito. | Definido |
 
 ### 15.1 Headers mínimos propostos para produção
 
@@ -366,7 +397,7 @@ Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um a
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-BE-001` | Java e Spring Boot DEVEM usar versões suportadas, fixadas e atualizadas; a escolha será registrada em arquitetura/ADR. | Matriz de suporte, SCA e build. | Pendente: versões |
+| `SEG-BE-001` | Java e Spring Boot DEVEM usar versões LTS/estáveis suportadas, fixadas na preparação do projeto e mantidas atualizadas. | Matriz de suporte, SCA e build reproduzível. | Critério definido; números serão fixados no início do código |
 | `SEG-BE-002` | Spring Security DEVE ser a camada padrão de autenticação/autorização; desabilitar controle só é permitido em teste isolado. | Configuração e testes. | Proposto |
 | `SEG-BE-003` | Autorização DEVE existir também na camada de serviço/domínio para regras por objeto, não somente no mapeamento da rota. | Revisão e testes unitários/integrados. | Proposto |
 | `SEG-BE-004` | Bean Validation e validações de negócio DEVEM ocorrer na fronteira e antes de efeito persistente. | Testes negativos. | Proposto |
@@ -387,17 +418,18 @@ Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um a
 | `SEG-DB-003` | Conta da aplicação DEVE possuir menor privilégio e não alterar schema em produção. | Revisão de grants. | Proposto |
 | `SEG-DB-004` | Constraints DEVEM reforçar unicidade, chaves, capacidade e estados quando possível; autorização continua obrigatória no serviço. | Migrações e testes concorrentes. | Proposto |
 | `SEG-DB-005` | Consulta dinâmica DEVE ser parametrizada; nome de coluna/ordenação usa allowlist. | SAST e revisão. | Proposto |
-| `SEG-DB-006` | Dados restritos em repouso DEVEM usar criptografia de volume/serviço e, quando o modelo de ameaças exigir, criptografia por campo com chaves separadas. | Arquitetura, configuração e teste de recuperação. | Proposto; decisão pendente |
-| `SEG-DB-007` | Migração DEVE ser versionada, revisada, testada em cópia sintética/mascarada e possuir rollback ou estratégia de avanço seguro. | Pipeline e evidência. | Proposto |
+| `SEG-DB-006` | MySQL, arquivos e backups DEVEM usar criptografia enquanto armazenados. CPF, e-mails, telefones, contatos de emergência e saúde usam criptografia por campo; CPF e e-mail também possuem hash normalizado separado para pesquisa. Nome e nascimento permanecem pesquisáveis, protegidos pelo banco, pelo acesso e pela ausência em logs. | Arquitetura, configuração e teste de recuperação. | Definido; método e chaves serão alinhados com Prefeitura/Embrass |
+| `SEG-DB-007` | Migração Flyway DEVE ser versionada no padrão `V001__descricao.sql`, revisada, testada em dados sintéticos/mascarados e possuir rollback ou estratégia de avanço seguro. | Pipeline e evidência. | Definido |
 | `SEG-DB-008` | Seed e fixture DEVEM ser sintéticos; CPF, telefone, saúde e comprovante reais são PROIBIDOS. | Scan e revisão. | Proposto |
 | `SEG-DB-009` | Cache NÃO DEVE misturar usuários, papéis ou classificações; chaves devem incluir escopo seguro e expirar. | Testes de cache crossing. | Proposto |
 | `SEG-DB-010` | Acesso administrativo ao banco DEVE ser nominal, temporário quando viável, MFA/identidade forte e auditado. | Logs e revisão de acesso. | Proposto |
+| `SEG-DB-011` | Sessões e tokens expirados ou consumidos DEVEM ser removidos após 30 dias; controles detalhados de tentativas e limites, após 90 dias; eventos resumidos permanecem na auditoria por 5 anos. | Rotinas de descarte e testes. | Definido |
 
 ## 18. Criptografia, transporte e certificados
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-CRP-001` | Produção e homologação com dado/confidencial DEVEM usar HTTPS/TLS em todo fluxo; HTTP só em loopback local sem dado real. | Teste TLS e redirecionamento. | Proposto |
+| `SEG-CRP-001` | Produção DEVE usar HTTPS/TLS em todo fluxo; HTTP só é permitido em desenvolvimento local, sem dado real e apenas em loopback. | Teste TLS e redirecionamento. | Proposto |
 | `SEG-CRP-002` | TLS mínimo 1.2; preferir 1.3; certificado válido e hostname verificado. Desabilitar validação é PROIBIDO. | Scanner TLS. | Proposto |
 | `SEG-CRP-003` | HSTS DEVE ser habilitado após confirmar que todos os recursos e subdomínios necessários usam HTTPS. | Header e plano de ativação. | Proposto |
 | `SEG-CRP-004` | Segredo ou dado sensível em URL é PROIBIDO. | Testes e logs. | Proposto |
@@ -412,11 +444,12 @@ Baseline inicial proposta: PDF, JPEG e PNG; máximo de 10 MiB por arquivo e um a
 | `SEG-SEG-001` | Senha, token, chave, connection string e certificado privado DEVEM permanecer no backend/cofre aprovado. | Inventário e scan. | Proposto |
 | `SEG-SEG-002` | `.env` real, arquivo de credencial e segredo em código, commit, issue, chat, e-mail, prompt de IA ou documentação são PROIBIDOS. | `.gitignore`, secret scanning e treinamento. | Proposto |
 | `SEG-SEG-003` | `.env.example` PODE conter apenas nomes, descrição e valores fictícios. | Revisão. | Proposto |
-| `SEG-SEG-004` | Cofre oficial (“GitNode” no Guia ou substituto formalmente aprovado) DEVE ser identificado antes de build/deploy com segredo real. | ADR/política e configuração do pipeline. | Pendente; bloqueador de integração/produção |
+| `SEG-SEG-004` | Segredos reais DEVEM usar o cofre ou mecanismo seguro fornecido e homologado pela infraestrutura da Prefeitura/Embrass. | Registro do mecanismo escolhido e configuração do pipeline. | Solução definida; ferramenta física pendente de infraestrutura |
 | `SEG-SEG-005` | Segredo DEVE ser injetado em runtime/deploy por identidade de workload, nunca embutido em imagem, camada, cache ou artefato. | Inspeção de imagem/artefato. | Proposto |
-| `SEG-SEG-006` | Desenvolvimento, homologação e produção DEVEM ter segredos distintos; PR/preview não recebe segredo de produção. | Configuração de ambiente. | Proposto |
+| `SEG-SEG-006` | Desenvolvimento/testes e produção DEVEM ter segredos distintos; PR ou execução de teste não recebe segredo de produção. | Configuração de ambiente. | Proposto |
 | `SEG-SEG-007` | Todo segredo DEVE possuir proprietário, escopo, ambiente, criação, revisão/expiração, rotação, revogação e trilha. | Inventário. | Proposto |
 | `SEG-SEG-008` | Logs de CI e aplicação DEVEM mascarar valores; segredo não deve aparecer em argumento de comando. | Teste de pipeline. | Proposto |
+| `SEG-SEG-009` | Segredo DEVE ser trocado imediatamente após exposição, suspeita de vazamento ou retirada de acesso. Credenciais e tokens de integração serão revistos e trocados pelo menos a cada 90 dias; chaves de criptografia serão revistas anualmente e trocadas quando necessário. Prazo menor do fornecedor ou da Prefeitura prevalece. | Inventário com datas, alertas de vencimento e teste do procedimento de rotação. | Definido |
 
 ### 19.1 Segredo exposto
 
@@ -434,19 +467,19 @@ Apagar o valor do arquivo atual não encerra o incidente.
 
 ## 20. Privacidade, LGPD e dados de menores
 
-O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes e dados de crianças/adolescentes. A [LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm) exige medidas técnicas e administrativas, finalidade, necessidade, transparência, segurança, prevenção e responsabilização. A hipótese legal **não será presumida neste documento**; deverá ser definida pelo controlador e revisada pelo encarregado.
+O SIDESP tratará dados pessoais, dados de saúde, comprovantes e dados de crianças/adolescentes. A [LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm) exige medidas técnicas e administrativas, finalidade, necessidade, transparência, segurança, prevenção e responsabilização. A equipe definiu controles internos e uma retenção acadêmica inicial; hipótese legal, avisos oficiais e validação da retenção caberão aos responsáveis institucionais antes de eventual uso real.
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-PRI-001` | Antes de dado real, DEVEM ser definidos controlador, operador(es), encarregado, titulares, finalidades, hipóteses legais, compartilhamentos, países, retenção e direitos. | `PRIVACIDADE_E_DADOS.md` aprovado. | Pendente; bloqueador |
+| `SEG-PRI-001` | Antes de dado real, a Prefeitura DEVE indicar controlador, operador(es), encarregado e contatos, além de validar finalidades, hipóteses legais, compartilhamentos, retenção e direitos. | `PRIVACIDADE_E_DADOS.md` ou decisão institucional equivalente aprovada. | Pendente; bloqueador da implantação real |
 | `SEG-PRI-002` | Coleta DEVE limitar-se ao estritamente necessário; campo “útil no futuro” sem finalidade é PROIBIDO. | Revisão de formulário e dicionário. | Proposto |
-| `SEG-PRI-003` | Dados de saúde somente PODEM ser coletados após justificar necessidade, base, profissionais/papéis autorizados, emergência, retenção e risco. | Decisão de privacidade e teste de acesso. | Pendente; bloqueador |
-| `SEG-PRI-004` | Tratamento de crianças/adolescentes DEVE considerar melhor interesse, transparência apropriada e verificação do responsável conforme decisão jurídica. | Fluxo e aviso aprovados. | Pendente; bloqueador |
-| `SEG-PRI-005` | Vínculo do responsável legal DEVE ser comprovado, atualizado, revogável e protegido contra associação indevida. | Processo e testes. | Pendente |
-| `SEG-PRI-006` | Avisos e telas DEVEM explicar finalidades, uso compartilhado, duração, controlador, contato e direitos de modo claro. | Aviso de privacidade aprovado. | Pendente |
-| `SEG-PRI-007` | Solicitações de titular DEVEM possuir canal, autenticação proporcional, prazo, registro e resposta sem revelar terceiros. | Procedimento e testes. | Pendente |
-| `SEG-PRI-008` | Retenção e descarte DEVEM ser definidos por categoria; backup e log também respeitam a política. | Tabela de retenção e jobs. | Pendente; bloqueador de produção |
-| `SEG-PRI-009` | Relatório e mapa DEVEM evitar reidentificação e uso discriminatório; filtros de gênero, idade, satisfação e região exigem finalidade e limiar. | Avaliação e testes. | Pendente |
+| `SEG-PRI-003` | A ficha de saúde limita-se a alergias, restrições físicas, medicamentos, deficiências/adaptações, observações médicas, tipo sanguíneo opcional e contato de emergência. O acesso segue `SEG-AUTZ-007`, e a retenção termina 1 ano após o vínculo. | Decisão de privacidade, testes de acesso e descarte. | Definido para o projeto; hipótese legal e validação institucional pendentes |
+| `SEG-PRI-004` | Tratamento de crianças/adolescentes DEVE considerar o melhor interesse, usar linguagem clara e validar o responsável antes de criar a conta do menor. | Fluxo, telas, comunicação e testes. | Definido para o projeto; validação institucional pendente |
+| `SEG-PRI-005` | O responsável não possui conta própria. O vínculo exige nome, CPF, e-mail e WhatsApp, confirmação do e-mail e proteção contra associação indevida. Um responsável pode se vincular a mais de um aluno. Aos 18 anos, o vínculo é desativado e segue a retenção definida. | Processo, confirmação, unicidade e testes de maioridade. | Definido |
+| `SEG-PRI-006` | Avisos e telas DEVEM explicar finalidades, compartilhamentos, duração, controlador, contato e direitos em linguagem clara. | Aviso de privacidade aprovado. | Conteúdo mínimo definido; texto institucional pendente antes do uso real |
+| `SEG-PRI-007` | Solicitações de inativação ou exclusão DEVEM ser tratadas por administrador total, com resposta inicial em até 15 dias corridos, autenticação proporcional e registro sem revelar terceiros. Heitor Leite analisa os casos com dados sensíveis. | Procedimento, auditoria e testes. | Definido para o projeto; prazo definitivo depende de validação institucional |
+| `SEG-PRI-008` | Retenção e descarte DEVEM seguir a política inicial do levantamento de requisitos: perfil e registros principais por 5 anos; saúde e responsável por 1 ano após o marco aplicável; comprovantes por 1 ano; notificações por até 1 ano; auditoria por 5 anos; exportações por 24 horas; backups por 30 dias. | Tabela de retenção, rotinas e testes de descarte. | Definido para o projeto; validação institucional pendente |
+| `SEG-PRI-009` | Relatório e mapa futuros DEVEM evitar reidentificação e uso discriminatório. Grupos com menos de 3 pessoas não podem ser exibidos; filtros sucessivos também devem ser avaliados. | Avaliação e testes. | Definido para versão futura; campos dependem da Secretaria |
 | `SEG-PRI-010` | Dados reais NÃO DEVEM ser enviados a IA externa, ferramenta, plugin ou suporte sem fornecedor, finalidade, transferência, retenção e acesso aprovados. | Política `AGENTS.md` e registro de fornecedor. | Proposto |
 | `SEG-PRI-011` | Necessidade de RIPD DEVE ser avaliada antes de saúde, menores, análise em escala ou alto risco. | Decisão do controlador/encarregado. | Pendente |
 | `SEG-PRI-012` | Alteração de finalidade ou novo compartilhamento exige revisão antes da implementação. | Registro de mudança e aprovação. | Proposto |
@@ -467,13 +500,13 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-WA-001` | Fornecedor oficial, contrato, templates, base/consentimento, opt-out, fallback e custo DEVEM ser aprovados antes da integração. | Decisão formal. | Pendente; bloqueador |
+| `SEG-WA-001` | WhatsApp está fora da primeira versão. Antes de sua futura ativação, fornecedor oficial, contrato, templates, base legal, funcionamento obrigatório para quem cadastrar o canal, fallback e custo DEVEM ser aprovados. | Decisão formal. | Pendente apenas para versão futura |
 | `SEG-WA-002` | Mensagem DEVE conter somente o mínimo; comprovante, dado de saúde, senha, token, CPF completo e detalhe desnecessário são PROIBIDOS. | Revisão de templates. | Proposto |
-| `SEG-WA-003` | Número de telefone e vínculo com aluno/responsável DEVEM ser verificados e atualizáveis. | Fluxo e teste. | Pendente |
+| `SEG-WA-003` | O número de WhatsApp do responsável é obrigatório no cadastro do menor e deverá ser verificado antes de receber mensagens pelo canal futuro. Mudança do número exige nova verificação. | Fluxo e teste. | Cadastro definido; verificação do canal depende do fornecedor futuro |
 | `SEG-WA-004` | Webhook DEVE validar assinatura com comparação segura, timestamp, tolerância curta e proteção de replay. | Testes de assinatura/replay. | Proposto |
 | `SEG-WA-005` | Evento e tentativa DEVEM ter IDs idempotentes; callback repetido não duplica mudança. | Testes. | Proposto |
 | `SEG-WA-006` | Segredo de webhook/API fica no cofre e deve ser rotacionável sem indisponibilidade prolongada. | Runbook e teste de rotação. | Proposto |
-| `SEG-WA-007` | Histórico DEVE minimizar/mascarar telefone e conteúdo conforme papel; retenção pendente. | Teste de `UC-COM-03`. | Pendente |
+| `SEG-WA-007` | Histórico DEVE minimizar/mascarar telefone e conteúdo conforme papel e ser descartado em até 1 ano, preservando somente o registro técnico mínimo quando necessário. | Teste e rotina de descarte. | Definido para versão futura |
 | `SEG-WA-008` | Falha de entrega DEVE ficar visível e acionar fallback aprovado; “enviado ao provedor” não significa “entregue”. | Estados e alertas. | Proposto |
 
 ### 21.3 Mapas e geocodificação
@@ -481,7 +514,7 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
 | `SEG-MAP-001` | Serviço de mapas NÃO DEVE receber posição/endereço de aluno ou responsável. | Inspeção de tráfego. | Proposto |
-| `SEG-MAP-002` | Apenas polo público e agregados acima do limiar aprovado podem ser enviados/exibidos. | Teste de payload/filtro. | Pendente: limiar |
+| `SEG-MAP-002` | Apenas polo público e agregados com pelo menos 3 pessoas podem ser enviados ou exibidos; filtros sucessivos não podem permitir reidentificação. | Teste de payload/filtro. | Definido para versão futura |
 | `SEG-MAP-003` | Chave pública restrita por origem/API pode aparecer no cliente apenas se o fornecedor a definir como pública; segredo permanece no backend. | Configuração do fornecedor e bundle scan. | Proposto |
 | `SEG-MAP-004` | Falha do mapa DEVE preservar alternativa textual/tabular. | Teste de indisponibilidade. | Proposto |
 
@@ -507,10 +540,10 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 | `SEG-LOG-002` | Senha, token, cookie, segredo, código MFA/recuperação, conteúdo integral de comprovante e saúde desnecessária NÃO DEVEM ser registrados. | Teste de canário e scan de logs. | Proposto |
 | `SEG-LOG-003` | Cliente NÃO DEVE receber stack trace, SQL, segredo ou caminho interno; detalhe fica em ambiente protegido. | Testes de erro. | Proposto |
 | `SEG-LOG-004` | Auditoria crítica DEVE ser resistente a alteração/exclusão pela aplicação comum e registrar antes/depois quando aplicável. | Permissões/storage e teste. | Proposto |
-| `SEG-LOG-005` | Logs DEVEM ter controle de acesso, integridade, criptografia, retenção e descarte definidos. | Política e configuração. | Pendente: retenção |
+| `SEG-LOG-005` | Logs DEVEM ter controle de acesso, integridade, criptografia e descarte. Logs operacionais duram 90 dias e registros de auditoria, 5 anos, salvo preservação por investigação. | Política, configuração e rotina de descarte. | Definido |
 | `SEG-LOG-006` | Relógios DEVEM ser sincronizados; eventos entre serviços devem ser correlacionáveis. | Configuração e teste. | Proposto |
 | `SEG-LOG-007` | Acesso e exportação de logs DEVEM ser auditados e limitados; log não é banco alternativo. | Revisão de acesso. | Proposto |
-| `SEG-LOG-008` | Alertas DEVEM possuir responsável, severidade, canal, horário de cobertura e runbook. | Catálogo de alertas. | Pendente |
+| `SEG-LOG-008` | Alertas DEVEM possuir severidade, canal e orientação de resposta. O funcionamento será verificado a cada minuto e falha crítica deverá alertar Heitor Leite em até 5 minutos. | Catálogo de alertas e teste de entrega. | Definido inicialmente; ferramenta depende da infraestrutura |
 
 ### 22.3 Alertas mínimos
 
@@ -521,7 +554,7 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 - acesso anormal a comprovante/dado sensível;
 - assinatura inválida/replay de webhook;
 - malware ou taxa elevada de upload rejeitado;
-- falha persistente de WhatsApp/mapas e fila acumulada;
+- falha persistente de e-mail, outbox ou worker; WhatsApp e mapas serão acrescentados quando entrarem no escopo;
 - secret scanning, SAST, SCA ou container scan crítico;
 - aumento de `5xx`, latência, consumo, falha de banco, espaço ou backup;
 - mudança de configuração/infraestrutura fora do pipeline.
@@ -530,21 +563,21 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-RES-001` | SLO, RPO e RTO DEVEM ser aprovados antes da infraestrutura final e produção. | Documento de arquitetura/continuidade. | Pendente; bloqueador de produção |
+| `SEG-RES-001` | O serviço DEVE buscar 99,5% de disponibilidade mensal. São permitidas até 4 horas mensais de manutenção programada, avisada com 48 horas de antecedência e excluída do cálculo. O RPO é 24 horas e o RTO, 8 horas. | Documento de arquitetura, monitoramento e exercício de recuperação. | Definido; homologação operacional com Prefeitura/Embrass pendente |
 | `SEG-RES-002` | Operações críticas DEVEM ser transacionais/idempotentes e distinguir `pendente`, `confirmada`, `falha` e `desconhecida`. | Testes de interrupção/replay. | Proposto |
 | `SEG-RES-003` | Timeout, retry e circuit breaker DEVEM evitar cascata; retry não pode ser infinito. | Configuração e testes. | Proposto |
-| `SEG-RES-004` | Banco e arquivos necessários DEVEM ter backup criptografado, segregado e protegido contra alteração; escopo/frequência seguem RPO. | Job, inventário e evidência. | Proposto; valores pendentes |
+| `SEG-RES-004` | Banco e arquivos necessários DEVEM ter backup diário criptografado, segregado e protegido contra alteração, com retenção de 30 dias. | Job, inventário e evidência. | Definido |
 | `SEG-RES-005` | Restore DEVE ser testado periodicamente em ambiente isolado e medir RTO; backup não testado não conta como recuperação. | Ata de exercício. | Proposto |
 | `SEG-RES-006` | Chaves/segredos necessários ao restore DEVEM possuir recuperação segura e separada. | Procedimento testado. | Proposto |
 | `SEG-RES-007` | Dados restaurados DEVEM manter autorização, auditoria e política de retenção; teste não usa cópia real sem aprovação. | Checklist de restore. | Proposto |
-| `SEG-RES-008` | Estratégia de conectividade instável na chamada DEVE impedir perda silenciosa e confirmação falsa. | Decisão e teste offline/reenvio. | Pendente; bloqueador do fluxo |
-| `SEG-RES-009` | Operação degradada de WhatsApp/mapas DEVE estar documentada; falha de fornecedor não bloqueia fluxos independentes. | Runbook e teste. | Proposto |
+| `SEG-RES-008` | A chamada offline DEVE usar o rascunho protegido das seções 10 e 15, mostrar o estado “não sincronizado”, reenviar com idempotência e nunca sobrescrever automaticamente uma versão já salva no servidor. | Teste offline, reenvio, expiração e conflito. | Definido |
+| `SEG-RES-009` | Falha de e-mail não desfaz a operação principal nem substitui a notificação interna obrigatória. Futuros WhatsApp e mapas também deverão preservar fluxos independentes. | Runbook e teste. | Definido para a primeira versão |
 
 ## 24. Infraestrutura, containers e ambientes
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-INF-001` | Desenvolvimento, teste, homologação e produção DEVEM ser isolados por contas/projetos, rede, dados e segredos. | Diagrama e configuração. | Proposto |
+| `SEG-INF-001` | O SIDESP terá dois ambientes permanentes: desenvolvimento/testes e produção. Eles DEVEM ter dados, acessos, redes e segredos separados; desenvolvimento/testes usa somente dados sintéticos ou formalmente mascarados. | Diagrama e configuração. | Definido |
 | `SEG-INF-002` | Produção só DEVE ser acessível por identidade nominal, MFA e canal administrativo protegido; acesso direto deve ser excepcional, temporário e auditado. | IAM e logs. | Proposto |
 | `SEG-INF-003` | Banco, storage privado e portas de management NÃO DEVEM estar públicos. | Scanner externo e regras de rede. | Proposto |
 | `SEG-INF-004` | Firewall/security group DEVE negar por padrão e permitir apenas origem, destino, porta e protocolo necessários. | Revisão de regra. | Proposto |
@@ -553,7 +586,7 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 | `SEG-INF-007` | IaC DEVE ser versionada, revisada, escaneada e aplicada pelo pipeline; estado de IaC é restrito e protegido. | PR, scan e backend de estado. | Proposto |
 | `SEG-INF-008` | Patching, inventário e SLA de atualização DEVEM cobrir SO, runtime, banco, imagem e serviços. | Relatório e tickets. | Proposto |
 | `SEG-INF-009` | Quotas de CPU, memória, storage, conexões e custo DEVEM limitar exaustão e abuso. | Configuração e alertas. | Proposto; valores pendentes |
-| `SEG-INF-010` | Ambiente efêmero DEVE usar dado sintético, segredo próprio e destruição segura; PR externo não recebe segredo. | Pipeline e teste. | Proposto |
+| `SEG-INF-010` | Execução temporária de teste ou PR DEVE usar dado sintético, segredo próprio e destruição segura; nunca recebe segredo de produção. | Pipeline e teste. | Proposto |
 | `SEG-INF-011` | Console/cloud root ou proprietário não deve ser usado rotineiramente; conta de emergência fica protegida, monitorada e testada. | IAM e procedimento break-glass. | Proposto |
 
 ## 25. Dependências e cadeia de suprimentos
@@ -569,9 +602,9 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 | `SEG-SUP-007` | Repositório/pacote com nome semelhante, origem nova ou install script exige revisão reforçada contra typosquatting. | Checklist do PR. | Proposto |
 | `SEG-SUP-008` | Dependência sem manutenção, vulnerável ou desnecessária DEVE ser removida/substituída com prazo. | Plano de correção. | Proposto |
 
-### 25.1 SLA inicial de vulnerabilidades
+### 25.1 Prazos iniciais para vulnerabilidades
 
-| Severidade | Ação inicial | Prazo máximo proposto para corrigir/mitigar |
+| Severidade | Ação inicial | Prazo máximo para corrigir ou mitigar |
 | --- | --- | --- |
 | Crítica explorada/exposta | Conter imediatamente; pode suspender serviço/release | 24 horas |
 | Crítica não explorada | Bloquear release e priorizar | 72 horas |
@@ -579,7 +612,7 @@ O SIDESP tratará dados pessoais e poderá tratar dados de saúde, comprovantes 
 | Média | Tratar no ciclo priorizado | 60 dias |
 | Baixa | Registrar e planejar | 120 dias |
 
-Os prazos dependem de política oficial. Exceção requer risco formal; indisponibilidade de patch exige mitigação compensatória e monitoramento.
+Estes são os prazos iniciais do projeto. Exceção exige risco formal, responsável e vencimento; indisponibilidade de correção exige proteção compensatória e monitoramento.
 
 ## 26. Desenvolvimento seguro e revisão de código
 
@@ -593,6 +626,7 @@ Os prazos dependem de política oficial. Exceção requer risco formal; indispon
 | `SEG-DEV-006` | IA PODE auxiliar código/documentação, mas saída exige revisão, teste e atribuição humana; dados/segredos proibidos não entram no prompt. | `AGENTS.md` e PR. | Proposto |
 | `SEG-DEV-007` | Mudança de controle crítico DEVE atualizar documentos e testes no mesmo PR. | Diff e rastreabilidade. | Proposto |
 | `SEG-DEV-008` | Teste ofensivo só pode ocorrer com autorização, escopo, janela e ambiente aprovados. Produção não é alvo implícito. | Registro de autorização. | Proposto |
+| `SEG-DEV-009` | Antes da produção, Micael Phillipini, Heitor Leite e pelo menos uma pessoa que não desenvolveu o trecho analisado DEVEM revisar os controles e as evidências de segurança. Teste de invasão formal só ocorre com autorização e quando exigido pela Prefeitura/Embrass. | Registro dos revisores, checklist e resultados. | Definido |
 
 ## 27. CI/CD e gates
 
@@ -683,7 +717,7 @@ QA manterá matriz `controle SEG-* × requisito RF/RNF × caso UC × teste CT ×
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
-| `SEG-VUL-001` | Canal privado para relato de vulnerabilidade DEVE existir antes da publicação do produto. | Contato/processo divulgado. | Pendente |
+| `SEG-VUL-001` | Vulnerabilidade DEVE ser relatada pelo recurso privado de segurança do GitHub ou diretamente a Heitor Leite pelo canal interno da equipe. Issue pública NÃO DEVE conter vulnerabilidade ainda não corrigida nem evidência sensível. Antes da implantação real, a Prefeitura indicará o contato institucional. | Recurso privado habilitado, orientação aos colaboradores e contato institucional antes da produção. | Definido para o projeto; contato institucional pendente |
 | `SEG-VUL-002` | Achado DEVE ser triado por impacto real, alcance, exploração e dado afetado, sem reduzir risco só pelo score automático. | Ticket confidencial. | Proposto |
 | `SEG-VUL-003` | Evidência com dado/segredo DEVE ter acesso restrito e nunca ir a issue pública. | Processo. | Proposto |
 | `SEG-VUL-004` | Correção DEVE incluir teste de regressão e busca por variantes. | PR/testes. | Proposto |
@@ -696,14 +730,14 @@ Um `RESPOSTA_A_INCIDENTES.md` e um runbook operacional deverão detalhar contato
 
 ### 30.1 Severidade inicial
 
-| Nível | Exemplo no SIDESP | Resposta inicial proposta |
+| Nível | Exemplo no SIDESP | Resposta inicial definida |
 | --- | --- | --- |
 | `SEV-1 Crítica` | credencial/chave de produção exposta; acesso não autorizado a saúde/comprovantes; alteração ampla; indisponibilidade crítica; exploração ativa | Mobilização imediata, contenção prioritária e comando de incidente |
 | `SEV-2 Alta` | acesso indevido limitado, perda relevante de integridade, exportação anormal, malware contido | Resposta em até 1 hora e análise de impacto |
 | `SEV-3 Média` | tentativa recorrente bloqueada, vulnerabilidade sem exploração conhecida, falha parcial de fornecedor | Resposta no mesmo dia útil |
 | `SEV-4 Baixa` | evento sem impacto confirmado, melhoria de controle | Triagem no fluxo normal |
 
-Os tempos dependem de aprovação e cobertura operacional.
+Os tempos acima são a baseline inicial do projeto. A cobertura real e os canais de acionamento serão formalizados com Prefeitura/Embrass antes da produção.
 
 ### 30.2 Fluxo obrigatório
 
@@ -724,25 +758,25 @@ Incidente pode envolver acesso, alteração, perda, destruição ou indisponibil
 
 IA, pessoa desenvolvedora ou fornecedor NÃO PODE decidir sozinho que a comunicação não é necessária.
 
-### 30.4 Contatos pendentes
+### 30.4 Responsáveis e contatos
 
 | Função | Nome | Canal primário | Alternativo |
 | --- | --- | --- | --- |
-| Comando de incidente | Pendente | Pendente | Pendente |
-| Segurança | Pendente | Pendente | Pendente |
-| Operações | Pendente | Pendente | Pendente |
-| Controlador/Negócio | Pendente | Pendente | Pendente |
-| Encarregado/Privacidade | Pendente | Pendente | Pendente |
-| Jurídico/Comunicação | Pendente | Pendente | Pendente |
+| Comando técnico e segurança | Heitor Leite | Canal interno da equipe | Canal ainda será registrado antes da produção |
+| Impacto operacional e coordenação | Kauãn Raphael | Canal interno da equipe | Canal ainda será registrado antes da produção |
+| Produto e comunicação com usuários | Livia Andrade | Canal interno da equipe | Canal ainda será registrado antes da produção |
+| QA e preservação das evidências de teste | Micael Phillipini | Canal interno da equipe | Canal ainda será registrado antes da produção |
+| Operações de infraestrutura | Prefeitura/Embrass | Pendente de formalização | Pendente de formalização |
+| Controlador, encarregado, jurídico e comunicação oficial | A indicar pela Prefeitura | Pendente de formalização | Pendente de formalização |
 
-Ausência desses contatos é bloqueadora de produção.
+Os responsáveis internos permitem organizar o projeto acadêmico. A ausência dos nomes e canais institucionais continua bloqueadora somente da implantação com dados reais.
 
 ## 31. Acesso de suporte e administração
 
 | ID | Controle obrigatório | Critério/evidência | Status |
 | --- | --- | --- | --- |
 | `SEG-OPS-001` | Suporte DEVE operar com ferramenta/visão própria e dados mascarados, não por impersonação silenciosa. | Fluxo e teste. | Proposto |
-| `SEG-OPS-002` | Impersonação, se indispensável, exige permissão separada, motivo, tempo limitado, indicação visual e auditoria reforçada. | Aprovação e teste. | Pendente |
+| `SEG-OPS-002` | Impersonação — entrar ou agir como outro usuário — é PROIBIDA na primeira versão. Suporte e administradores DEVEM usar a própria conta, e toda ação fica vinculada ao seu autor real. | Ausência da função e testes de auditoria. | Definido |
 | `SEG-OPS-003` | Consulta direta/alteração manual no banco em produção é PROIBIDA salvo incidente/migração aprovada, com backup, script revisado e evidência. | Runbook e logs. | Proposto |
 | `SEG-OPS-004` | Ferramenta administrativa NÃO DEVE permitir baixar toda a base por conveniência. | Teste de permissão/limite. | Proposto |
 | `SEG-OPS-005` | Conta de emergência deve ser lacrada logicamente, MFA forte, alerta de uso e revisão posterior. | Exercício break-glass. | Proposto |
@@ -780,7 +814,7 @@ O `AGENTS.md` foi criado na raiz e deverá ser aprovado antes do uso recorrente 
 - [ ] estratégia de testes e padrão de segredos definidos;
 - [ ] nenhum dado real em ambiente de desenvolvimento.
 
-### Gate 2 — Antes da primeira integração/homologação
+### Gate 2 — Antes da primeira integração em ambiente de desenvolvimento/testes
 
 - [ ] OpenAPI e contrato de erros/limites;
 - [ ] autorização por objeto e testes negativos;
@@ -793,7 +827,7 @@ O `AGENTS.md` foi criado na raiz e deverá ser aprovado antes do uso recorrente 
 ### Gate 3 — Antes de produção
 
 - [ ] ASVS 5.0 nível 2 verificado e controles reforçados selecionados;
-- [ ] pentest/revisão independente proporcional ao risco;
+- [ ] revisão de segurança por Micael, Heitor e uma pessoa que não desenvolveu o trecho; teste de invasão formal quando autorizado e exigido pela Prefeitura/Embrass;
 - [ ] nenhuma vulnerabilidade crítica e alta sem tratamento/aprovação;
 - [ ] privacidade, retenção, direitos e RIPD decididos;
 - [ ] restore e rollback testados; RPO/RTO aprovados;
@@ -871,22 +905,15 @@ Exceção é temporária e não transforma prática insegura em padrão.
 | Relatórios/mapa | `RF-REL-*`; `UC-REL-*` | `SEG-EXP-*`, `SEG-PRI-009`, `SEG-MAP-*`, autorização granular |
 | Infraestrutura e operação | RNFs de disponibilidade/observabilidade | `SEG-INF-*`, `SEG-CICD-*`, `SEG-RES-*`, `SEG-VUL-*` |
 
-## 36. Pendências bloqueadoras
+## 36. Pendências de segurança
+
+As decisões internas necessárias para revisar esta versão estão encerradas. Permanecem somente dependências da implantação real e de módulos que estão fora da primeira versão.
 
 | ID | Pendência | Bloqueia |
 | --- | --- | --- |
-| `PSEG-001` | Designar segurança, controlador, encarregado e contatos de incidente | Uso de dados reais e produção |
-| `PSEG-002` | Aprovar matriz granular de papéis, incluindo saúde, comprovante, exportação e exceção | Implementação de autorização administrativa/sensível |
-| `PSEG-003` | Decidir arquitetura de autenticação, MFA, sessão, recuperação e tempos | Implementação de identidade |
-| `PSEG-004` | Definir cofre oficial e fluxo de segredos | Primeira integração com credencial real e deploy |
-| `PSEG-005` | Definir dados de saúde, finalidade, base, acesso, retenção e RIPD | Coleta/exibição de saúde |
-| `PSEG-006` | Definir tratamento de menores e comprovação do responsável | Cadastro/comunicação de menor em produção |
-| `PSEG-007` | Aprovar tipos, limite, varredura, storage e retenção de comprovante | Upload em produção |
-| `PSEG-008` | Selecionar e avaliar fornecedor de WhatsApp, contrato, webhook, templates e fallback | Integração real |
-| `PSEG-009` | Definir fórmulas, campos, limiar de agregação, retenção e limites de exportação | Relatórios/mapa/exportações em produção |
-| `PSEG-010` | Aprovar SLO, volumes, RPO, RTO, backup e restore | Arquitetura final e produção |
-| `PSEG-011` | Decidir operação com internet instável | Chamada nos polos |
-| `PSEG-012` | Criar modelo de ameaças, estratégia de testes, contrato de API, banco, runbook e incidentes | Gate correspondente |
+| `PSEG-010` | Prefeitura/Embrass devem formalizar infraestrutura, cofre, ferramentas físicas, responsabilidades, canais e contatos institucionais. | Implantação real e uso de dados reais |
+| `PSEG-011` | Responsáveis institucionais devem validar hipótese legal, avisos, RIPD quando aplicável e política de retenção. | Implantação real e uso de dados reais |
+| `PSEG-012` | WhatsApp, mapas, relatórios e exportações exigem decisões e avaliações específicas quando entrarem em versão futura. | Somente os módulos futuros correspondentes |
 
 ## 37. Revisão e gatilhos
 
@@ -937,3 +964,4 @@ Referências verificadas em 12/08/2026:
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 12/08/2026 | Heitor Leite | Primeira baseline de segurança cobrindo governança, dados, identidade, sessão, autorização, API, arquivos, frontend, backend, banco, segredos, privacidade, fornecedores, logs, resiliência, infraestrutura, supply chain, CI/CD, testes, vulnerabilidades, incidentes e exceções | Rascunho |
+| `0.2.0` | 17/08/2026 | Heitor Leite | Alinhamento com requisitos e arquitetura aprovados: responsáveis, Angular/Spring Boot/MySQL, identidade, MFA, sessões, API, uploads, dados, retenção, observabilidade, backup, dois ambientes, vulnerabilidades, incidentes, rotação de segredos e revisão antes da produção | Pronto para revisão |

@@ -8,11 +8,14 @@
 | --- | --- |
 | Documento | Arquitetura de Software |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
-| Versão | `0.1.0` |
-| Data | 13/08/2026 |
-| Status | **Rascunho — arquitetura proposta, ainda não aprovada para produção** |
+| Versão | `0.2.0` |
+| Data | 17/08/2026 |
+| Status | **Pronto para revisão — ainda não aprovado para implementação** |
 | Classificação | Uso interno |
-| Responsável sugerido | Arquitetura/Liderança técnica |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| QA | Micael Phillipini |
 | Revisores necessários | Produto, Backend, Frontend, Dados, Segurança, Privacidade e Operações |
 | Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md`, `CASOS_DE_USO.md`, `CLASSES_OU_COMPONENTES.md`, `ATIVIDADES.md`, `../database/BANCO_DE_DADOS.md` e `SEGURANCA.md` |
 
@@ -20,18 +23,19 @@
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Product Owner/Secretaria | Lívia Andrade | Pendente | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente | — |
+| Product Owner | Livia Andrade | Pendente | — |
 | Liderança técnica | Heitor Leite | Pendente | — |
 | Backend | Heitor Leite | Pendente | — |
-| Frontend | A definir | Pendente | — |
-| Segurança e privacidade | A definir | Pendente | — |
-| Operações/Infraestrutura | A definir | Pendente | — |
+| Segurança e privacidade interna | Heitor Leite | Pendente | — |
+| QA | Micael Phillipini | Pendente | — |
+| Operações/Infraestrutura para implantação | Prefeitura/Embrass | Alinhamento futuro | — |
 
 ## 1. Objetivo e escopo
 
 Este documento explica a estrutura técnica planejada do SIDESP, suas fronteiras de responsabilidade, fontes da verdade, integrações, fluxos de dados e decisões que devem ser preservadas durante o desenvolvimento.
 
-A arquitetura descreve o produto completo, inclusive frontend, dados e serviços externos. A implementação de código inicialmente tratada pelo grupo deste repositório será o **backend em Java/Spring Boot**. A tecnologia do frontend, o provedor de hospedagem e os fornecedores externos ainda dependem de decisão formal.
+A arquitetura descreve o produto completo, inclusive o frontend em Angular/TypeScript, a API e o backend em Java/Spring Boot, os dados em MySQL e os serviços externos. O código sob responsabilidade desta frente será o backend. A Prefeitura e a Embrass fornecerão hospedagem, banco e infraestrutura; a topologia e as responsabilidades operacionais serão homologadas antes da implantação.
 
 O documento deve permitir responder:
 
@@ -47,22 +51,53 @@ O documento deve permitir responder:
 
 | Decisão | Direção inicial | Status |
 | --- | --- | --- |
-| Estilo do backend | Monólito modular, orientado a domínios, com portas e adaptadores | **Proposto** |
-| Linguagem/backend | Java em versão LTS homologada e Spring Boot | Confirmado quanto à família tecnológica; versões pendentes |
-| Interface principal | API HTTP REST/JSON, documentada por OpenAPI | Proposto |
-| Frontend | Aplicação web responsiva consumindo a API | Requisito confirmado; framework pendente |
-| Autenticação web | Sessão opaca mantida no servidor e cookie seguro | Proposto/preferencial em `SEGURANCA.md` |
-| Autorização | RBAC com validação adicional por objeto, vínculo e vigência no backend | Proposto; matriz de permissões pendente |
-| Banco | PostgreSQL `16.x` ou versão estável homologada | Proposto no modelo de dados |
-| Migrações | Flyway, scripts versionados | Proposto |
-| Arquivos | Storage privado; banco guarda metadados e autorização | Proposto |
-| Assíncrono inicial | Outbox transacional e workers no mesmo produto | Proposto |
+| Estilo do backend | Monólito modular, orientado a domínios, com portas e adaptadores | Confirmado em 17/08/2026 |
+| Linguagem/backend | Java LTS e Spring Boot estável/compatível, com versões exatas fixadas no início | Confirmado em 17/08/2026 |
+| Interface principal | API HTTP REST/JSON em `/api/v1`, documentada por OpenAPI | Confirmado em 17/08/2026 |
+| Frontend | Angular/TypeScript estável e com suporte ativo, com versão exata fixada no início | Confirmado pela equipe |
+| Autenticação web | Sessão opaca no servidor, persistida no MySQL, e cookie seguro | Confirmado pelas decisões de identidade e dados |
+| Autorização | RBAC com validação adicional por objeto, vínculo e vigência no backend | Base confirmada; detalhamento por endpoint será testado e documentado |
+| Banco | MySQL `8.x`, preferencialmente versão LTS homologada | Confirmado no modelo de dados |
+| Migrações | Flyway, scripts versionados e imutáveis após aplicação | Confirmado em 17/08/2026 |
+| Arquivos | Storage privado compatível com S3 e ClamAV; banco guarda metadados e autorização | Baseline confirmada; equivalente pode ser homologado |
+| Assíncrono inicial | Outbox transacional e worker no mesmo produto, sem broker externo | Confirmado em 17/08/2026 |
 | Broker de mensagens | Não faz parte da baseline inicial | Adiar até necessidade comprovada |
-| Integrações | Portas internas e adaptadores por fornecedor | Proposto |
-| Implantação | Containers, processo sem estado local e infraestrutura por ambiente | Proposto; provedor pendente |
+| Integrações | Portas internas e adaptadores por fornecedor | Confirmado com o estilo arquitetural |
+| Origem pública | Angular em `/` e API em `/api/v1` no mesmo endereço; origens separadas somente se a infraestrutura exigir | Confirmado em 17/08/2026 |
+| Implantação | Uma imagem Spring Boot; API e worker separados em produção e combináveis em desenvolvimento/testes | Confirmado logicamente; infraestrutura Prefeitura/Embrass |
+| Ambientes permanentes | `desenvolvimento/testes` e `produção` | Confirmado em 17/08/2026 |
+| Rascunho offline | IndexedDB criptografado, dados mínimos e expiração máxima de 24 horas | Confirmado em 17/08/2026 |
+| Segredos e observabilidade | Cofre da infraestrutura; logs JSON e padrão OpenTelemetry | Confirmado logicamente; ferramentas serão alinhadas com Prefeitura/Embrass |
+| Versões e nomes | Versões LTS/estáveis fixadas; pacote `com.github.heitorleite.sidesp`, artefatos `sidesp-backend` e `sidesp-web` | Confirmado em 17/08/2026 |
 | Multi-tenancy | Instância de uma única Secretaria | Confirmado pelo escopo atual; revisar se o produto mudar |
 
-Nenhuma versão, fornecedor ou topologia de produção está aprovada somente por aparecer neste documento.
+Versões exatas, fornecedores externos e detalhes físicos de produção precisam de homologação antes da implantação, mesmo quando a direção lógica já estiver aprovada.
+
+### 2.1 Glossário técnico
+
+| Termo | Significado no documento |
+| --- | --- |
+| Monólito modular | Uma única aplicação implantável, organizada internamente em módulos com responsabilidades separadas. |
+| Porta e adaptador | Separação entre a regra do sistema e a tecnologia usada para HTTP, banco, arquivos ou fornecedor externo. |
+| API REST | Forma padronizada de o frontend conversar com o backend por HTTP e recursos identificados por URLs. |
+| OpenAPI | Arquivo que documenta operações, entradas, respostas e erros da API. |
+| Sessão opaca | Identificador sem dados do usuário, guardado em cookie; o estado real da sessão fica no servidor. |
+| Cookie `HttpOnly` | Cookie que o JavaScript do navegador não consegue ler, reduzindo o risco de roubo por script. |
+| Outbox | Tabela gravada junto da operação principal para que uma notificação ou tarefa posterior não seja perdida. |
+| Worker | Processo que executa tarefas em segundo plano, como notificações e expirações. |
+| Job | Tarefa automática executada em determinado momento ou intervalo. |
+| Idempotência | Garantia de que repetir a mesma solicitação não duplica o efeito. |
+| Cache | Cópia temporária usada para acelerar leituras; nunca substitui a fonte oficial dos dados. |
+| Broker de mensagens | Serviço especializado em filas/eventos; não será usado inicialmente sem necessidade comprovada. |
+| Storage privado | Armazenamento de arquivos sem acesso público direto, liberado somente após autorização. |
+| IndexedDB | Banco local do navegador usado aqui apenas para o rascunho temporário e criptografado da chamada. |
+| S3 compatível | Padrão de acesso a armazenamento de arquivos que permite trocar a solução física por outra equivalente. |
+| ClamAV | Ferramenta de código aberto que verifica arquivos em busca de conteúdo malicioso conhecido. |
+| Cofre de segredos | Serviço protegido para senhas técnicas, chaves e credenciais da aplicação. |
+| OpenTelemetry | Padrão aberto para produzir métricas, rastreamentos e informações técnicas sem prender o sistema a uma ferramenta visual específica. |
+| ADR | Registro curto de uma decisão arquitetural, suas alternativas e consequências. |
+| RPO | Perda máxima de dados aceita após falha; inicialmente 24 horas. |
+| RTO | Tempo máximo planejado para restaurar o serviço; inicialmente 8 horas. |
 
 ## 3. Contexto e objetivos arquiteturais
 
@@ -73,7 +108,7 @@ Os principais objetivos arquiteturais são:
 1. **integridade transacional:** vagas, fila, frequência e decisões não podem divergir sob concorrência ou repetição;
 2. **segurança por padrão:** nenhum identificador fornecido pelo cliente concede acesso por si só;
 3. **rastreabilidade:** transições críticas preservam autor, instante, motivo e estado;
-4. **isolamento de fornecedores:** WhatsApp, mapas, e-mail e geradores de arquivo não entram no domínio;
+4. **isolamento de fornecedores:** e-mail e, em versões futuras, WhatsApp, mapas e geradores de exportação não entram nas regras centrais do sistema;
 5. **evolução incremental:** começar com uma unidade implantável simples, mantendo módulos substituíveis;
 6. **operação degradada:** falha externa não corrompe nem bloqueia funções independentes;
 7. **privacidade:** dados de menores, frequência, comprovantes e exportações recebem acesso e retenção específicos;
@@ -88,10 +123,10 @@ Os principais objetivos arquiteturais são:
 | Chamada atômica e correção auditável | Agregado transacional, histórico imutável e concorrência otimista |
 | Notificação por evento | Outbox na mesma transação do negócio e worker com retentativa limitada |
 | Upload potencialmente sensível | Quarentena, varredura, storage privado e autorização por objeto |
-| Relatórios e mapas | Consultas autorizadas, definições versionadas, agregação e supressão de grupos pequenos |
-| Conectividade instável nos polos | Resposta só após persistência confirmada; estratégia offline ainda é decisão bloqueadora |
+| Relatórios e mapas futuros | Consultas autorizadas, definições versionadas, agregação e supressão de grupos pequenos quando entrarem no escopo |
+| Conectividade instável nos polos | Rascunho local de chamada por até 24 horas, marcado como não sincronizado; somente confirmação do servidor conclui o salvamento |
 | Segurança e privacidade | Sessão revogável, MFA administrativo, cofre, minimização, auditoria e descarte |
-| Metas de desempenho/volume ausentes | Evitar otimização prematura; instrumentar e testar antes de dimensionar cache, réplica ou broker |
+| Metas iniciais de desempenho/volume | Validar 5.000 alunos, 200 turmas, 100 usuários simultâneos, p95 de 2 segundos em consultas e 3 segundos em alterações antes da implantação |
 | Orçamento e contratação pública | Componentes substituíveis, custos mensuráveis e ausência de dependência não justificada |
 
 Rastreabilidade principal: `RNF-SEG-*`, `RNF-PRI-*`, `RNF-DSP-001`, `RNF-CAP-001`, `RNF-DIS-001`, `RNF-RES-001`, `RNF-CON-001`, `RNF-OBS-001`, `RNF-MAN-001`, `RNF-EXP-001` e `RNF-POR-001`.
@@ -106,21 +141,21 @@ flowchart LR
     admin["Administrador/Gestor"]
     suporte["Suporte e operação autorizados"]
     sidesp["SIDESP"]
-    whatsapp["Provedor de mensagens/WhatsApp"]
+    whatsapp["Provedor de WhatsApp\nexpansão futura"]
     email["Serviço de e-mail/recuperação"]
-    mapas["Provedor de mapas/geocodificação"]
+    mapas["Provedor de mapas\nexpansão futura"]
     storage["Armazenamento privado de arquivos"]
     observabilidade["Plataforma de logs, métricas e alertas"]
 
     publico -->|"notícias, polos e modalidades"| sidesp
     aluno -->|"conta, inscrição, frequência e justificativa"| sidesp
     professor -->|"turmas, chamada e avisos"| sidesp
-    admin -->|"cadastros, decisões, permissões e relatórios"| sidesp
+    admin -->|"cadastros, decisões e permissões"| sidesp
     suporte -->|"operação controlada e auditada"| sidesp
     sidesp -->|"mensagens mínimas e templates aprovados"| whatsapp
     sidesp -->|"token opaco/aviso mínimo"| email
     sidesp -->|"polos públicos ou agregados"| mapas
-    sidesp -->|"comprovantes e exportações protegidos"| storage
+    sidesp -->|"comprovantes e futuras exportações"| storage
     sidesp -->|"telemetria minimizada"| observabilidade
 ```
 
@@ -151,8 +186,7 @@ flowchart TB
     end
 
     subgraph dados["Rede de dados privada"]
-        db[("PostgreSQL\nfonte da verdade transacional")]
-        session[("Sessões/cache\ncomponente pendente")]
+        db[("MySQL 8.x\ndados e sessões")]
         files[("Storage privado\ncomprovantes/exportações")]
         vault["Cofre de segredos"]
     end
@@ -163,16 +197,15 @@ flowchart TB
     end
 
     subgraph terceiros["Fornecedores externos"]
-        msg["WhatsApp/mensagens"]
+        msg["WhatsApp\nfuturo"]
         mail["E-mail/identidade"]
-        map["Mapas"]
+        map["Mapas\nfuturo"]
     end
 
     navegador --> dns
     navegador -->|"HTTPS"| edge
     edge -->|"HTTPS/rede privada"| api
     api --> db
-    api -.-> session
     api --> files
     api --> vault
     worker --> db
@@ -195,9 +228,9 @@ flowchart TB
 | Borda | TLS, roteamento, limites de conexão/tamanho, headers e proteção complementar | Substituir autorização do backend ou expor endpoints de gestão |
 | Backend HTTP | Contrato, sessão, autorização, casos de uso síncronos, transações e resposta | Chamar fornecedor diretamente dentro da transação quando o efeito puder ser assíncrono |
 | Worker/jobs | Outbox, retentativas, expirações, cálculos, publicação agendada e geração de arquivos | Criar regra paralela diferente da usada pela API |
-| PostgreSQL | Fonte da verdade transacional, constraints, metadados e auditoria | Ser acessível pelo frontend ou por usuário funcional via SQL |
+| MySQL | Fonte da verdade transacional, sessões, constraints, metadados e auditoria | Ser acessível pelo frontend ou por usuário funcional via SQL |
 | Storage privado | Conteúdo de comprovantes e exportações | Autorizar sozinho ou usar nome do usuário como caminho |
-| Sessão/cache | Sessão revogável, rate limit ou cache aprovado | Virar fonte da verdade de vaga, inscrição, frequência ou permissão |
+| Cache futuro | Acelerar somente leituras medidas e aprovadas; sessões ficam inicialmente no MySQL | Virar fonte da verdade de vaga, inscrição, frequência ou permissão |
 | Cofre | Segredos e chaves por ambiente/workload | Entregar segredo ao navegador ou registrar valor em log |
 | Observabilidade | Telemetria, investigação e alerta | Receber senha, token, comprovante ou dado sensível desnecessário |
 
@@ -205,7 +238,7 @@ flowchart TB
 
 ### 7.1 Monólito modular
 
-O backend começa como uma única base de código e, preferencialmente, uma única unidade de release. Internamente, cada domínio possui fronteira, pacote, modelo e interfaces explícitos.
+O backend começa como uma única base de código, uma única imagem e uma única unidade de release. Em produção, a API e o worker executam como processos ou containers separados a partir da mesma imagem; em desenvolvimento/testes, podem funcionar juntos. Internamente, cada domínio possui fronteira, pacote, modelo e interfaces explícitos.
 
 Essa escolha reduz custo operacional e transações distribuídas no início, sem aceitar um “monólito sem fronteiras”. Um módulo não acessa diretamente tabelas ou classes internas de outro módulo. A colaboração ocorre por serviço de aplicação publicado, porta de consulta ou evento interno.
 
@@ -261,7 +294,7 @@ flowchart LR
     enrollment["Inscrições e seleção"]
     attendance["Frequência e justificativas"]
     communication["Comunicação"]
-    reporting["Relatórios e análises"]
+    reporting["Relatórios e análises\nexpansão futura"]
     files["Arquivos"]
     audit["Auditoria"]
 
@@ -295,7 +328,7 @@ flowchart LR
 | `enrollment` | Elegibilidade, inscrição, fila, oferta, seleção, exceção e histórico | Inscrições, espera, ofertas e candidaturas |
 | `attendance` | Chamada, diário, frequência, correção, justificativa e apuração de faltas | Frequência, decisões e metadados do comprovante |
 | `communication` | Eventos, destinatários, templates, tentativas, callbacks e fallback | Notificações, outbox e entrega |
-| `reporting` | Indicadores, filtros, agregação, mapas, resultados e exportações | Definições e resultados derivados |
+| `reporting` | Expansão futura para indicadores, filtros, agregação, mapas, resultados e exportações | Definições e resultados derivados, somente após aprovação da Secretaria |
 | `files` | Quarentena, varredura, armazenamento, download autorizado e descarte | Metadados técnicos e acesso ao objeto privado |
 | `audit` | Registro imutável/minimizado de ações críticas | Eventos de auditoria e correlação |
 
@@ -311,7 +344,7 @@ flowchart LR
 ### 8.2 Estrutura de pacotes proposta
 
 ```text
-<pacote-base>.sidesp
+com.github.heitorleite.sidesp
 ├── identity
 │   ├── api
 │   ├── application
@@ -330,11 +363,11 @@ flowchart LR
     └── infrastructure
 ```
 
-Cada módulo repete a separação `api/application/domain/infrastructure`. O pacote-base oficial será definido ao criar o projeto; o exemplo não deve ser copiado como namespace definitivo sem decisão.
+Cada módulo repete a separação `api/application/domain/infrastructure`. O pacote-base acadêmico será `com.github.heitorleite.sidesp`, o artefato do backend será `sidesp-backend` e a aplicação Angular será `sidesp-web`. Qualquer mudança futura de namespace oficial exige decisão registrada e migração planejada.
 
 ## 9. Frontend e código público no navegador
 
-O frontend é uma aplicação web responsiva e acessível. Seu framework e hospedagem ainda não estão definidos.
+O frontend será uma aplicação Angular/TypeScript responsiva e acessível, baseada também nos [protótipos existentes no Figma](https://www.figma.com/design/41evldxEaPMcPxX15Z5CLd/Untitled?node-id=0-1&m=dev&t=7mEnpP0Kx9jTrD0K-1). A forma física de hospedagem será alinhada com Prefeitura e Embrass; o frontend sempre consumirá a API própria do SIDESP e nunca acessará o MySQL diretamente.
 
 Responsabilidades:
 
@@ -362,11 +395,22 @@ Nunca são enviados ao frontend:
 
 O frontend não persiste session ID, access token ou refresh token em `localStorage`, `sessionStorage`, IndexedDB, Cache API ou URL.
 
+### 9.1 Rascunho parcialmente offline da chamada
+
+O rascunho de chamada é a única exceção funcional de persistência local autenticada na primeira versão:
+
+- usa IndexedDB, nunca `localStorage`, e mantém o conteúdo criptografado com os recursos seguros do navegador;
+- guarda somente identificadores da aula e dos alunos, nomes mínimos para a chamada, `PRESENTE`/`AUSENTE`, versão, horários e chave de idempotência;
+- não guarda CPF, contato, ficha de saúde, justificativa, comprovante, sessão ou token;
+- fica claramente marcado como **não sincronizado** e não altera o estado oficial até o servidor confirmar;
+- é apagado depois da sincronização, do logout ou ao completar 24 horas;
+- uma versão já salva no servidor nunca é sobrescrita automaticamente; conflito exige recarga e, quando cabível, correção administrativa conforme a regra aprovada.
+
 ## 10. APIs e contratos
 
 ### 10.1 Estilo do contrato
 
-- API HTTP REST/JSON sob prefixo versionado, inicialmente proposto como `/api/v1`.
+- API HTTP REST/JSON sob o prefixo versionado `/api/v1`.
 - OpenAPI versionado é a fonte do contrato HTTP e deve permanecer sincronizado com rotas e DTOs.
 - Compatibilidade deve ser preservada dentro da versão; mudança incompatível exige nova versão ou janela formal de depreciação.
 - Datas usam ISO 8601; instantes preservam offset/UTC; apresentação usa `America/Sao_Paulo` após ratificação.
@@ -405,7 +449,7 @@ Erros seguem Problem Details (`application/problem+json`) ou formato equivalente
 
 ### 11.1 Autenticação
 
-A baseline preferencial é sessão opaca no servidor:
+A baseline definida é sessão opaca no servidor:
 
 1. login recebe CPF ou e-mail e senha por HTTPS;
 2. o backend normaliza o identificador e responde de forma antienumeração;
@@ -414,7 +458,7 @@ A baseline preferencial é sessão opaca no servidor:
 5. o navegador recebe cookie `Secure`, `HttpOnly`, `SameSite` aprovado, sem `Domain` e preferencialmente `__Host-`;
 6. logout, recuperação, mudança de senha, revogação e incidente invalidam a sessão no servidor.
 
-MFA administrativo é requisito proposto e bloqueador de produção administrativa; tecnologia e recuperação ainda dependem de decisão. OAuth/OIDC ou JWT somente entram mediante ADR e modelo de ameaças.
+MFA por código de e-mail é obrigatório em todo login administrativo. Recuperação usa link no e-mail confirmado; recuperação de senha revoga todas as sessões. OAuth/OIDC ou JWT somente entram futuramente mediante ADR e modelo de ameaças.
 
 ### 11.2 Ponto real de autorização
 
@@ -447,7 +491,7 @@ sequenceDiagram
     participant A as Serviço de aplicação
     participant D as Domínio/política
     participant P as Persistência
-    participant DB as PostgreSQL
+    participant DB as MySQL
 
     U->>F: Executa ação
     F->>C: HTTPS + sessão + CSRF + idempotência
@@ -481,7 +525,7 @@ Notificação, publicação externa e outros efeitos não essenciais ao commit p
 sequenceDiagram
     autonumber
     participant A as Caso de uso
-    participant DB as PostgreSQL
+    participant DB as MySQL
     participant W as Worker de outbox
     participant N as Módulo de comunicação
     participant X as Provedor externo
@@ -526,9 +570,9 @@ Garantias:
 | Expirar oferta de vaga | `expira_em` | Lock/versão; passa ao próximo uma única vez |
 | Apurar faltas | Chamada/correção e competência | Regra versionada; não cancela com pendência indefinida |
 | Reprocessar outbox | Intervalo/fila | Lease, limite e telemetria |
-| Atualizar entrega por callback | Webhook assinado | Identificador único, timestamp e replay protection |
-| Gerar exportação | Solicitação autorizada | Revalida permissão; arquivo parcial não fica disponível |
-| Descartar arquivos/exports | Expiração/retenção | Relatório de descarte e reconciliação com storage |
+| Atualizar entrega por callback — futuro | Webhook assinado | Só entra com fornecedor externo; identificador único, timestamp e proteção contra repetição |
+| Gerar exportação — futuro | Solicitação autorizada | Revalida permissão; arquivo parcial não fica disponível |
+| Descartar arquivos e futuras exportações | Expiração/retenção | Relatório de descarte e reconciliação com storage |
 | Revogar/limpar sessão e token | Expiração/revogação | Inutilização imediata e limpeza posterior |
 
 ### 13.3 Mensageria
@@ -541,21 +585,21 @@ Um broker externo não é necessário na primeira baseline. O outbox no banco e 
 
 | Informação | Fonte da verdade | Observação |
 | --- | --- | --- |
-| Usuário, papel e permissão | PostgreSQL do módulo de identidade | Cache nunca autoriza após revogação sem estratégia explícita |
-| Polo, modalidade, turma e aula | PostgreSQL do módulo esportivo | Alteração preserva vigência/histórico |
-| Inscrição, fila e oferta | PostgreSQL do módulo de inscrição | Constraints/transações resolvem concorrência |
-| Chamada e frequência | PostgreSQL do módulo de frequência | Uma chamada por aula; correções não apagam histórico |
-| Justificativa/decisão | PostgreSQL; conteúdo no storage privado | Metadado e estado autorizam o objeto |
-| Evento e entrega | PostgreSQL/outbox | O provedor externo não é fonte do evento de negócio |
-| Arquivo | Metadado no PostgreSQL e conteúdo no storage | Estado `DISPONIVEL/APROVADO` só após confirmação e hash |
+| Usuário, papel e permissão | MySQL do módulo de identidade | Cache nunca autoriza após revogação sem estratégia explícita |
+| Polo, modalidade, turma e aula | MySQL do módulo esportivo | Alteração preserva vigência/histórico |
+| Inscrição, fila e oferta | MySQL do módulo de inscrição | Constraints/transações resolvem concorrência |
+| Chamada e frequência | MySQL do módulo de frequência | Uma chamada por aula; correções não apagam histórico |
+| Justificativa/decisão | MySQL; conteúdo no storage privado | Metadado e estado autorizam o objeto |
+| Evento e entrega | MySQL/outbox | O provedor externo não é fonte do evento de negócio |
+| Arquivo | Metadado no MySQL e conteúdo no storage | Estado `DISPONIVEL/APROVADO` só após confirmação e hash |
 | Resultado de relatório | Dados operacionais + versão de indicador/filtro | Exportação é derivada e temporária |
-| Sessão | Armazenamento revogável aprovado | Tecnologia pendente; não usar sessão local da instância |
+| Sessão | MySQL na primeira versão | Sessão revogável e compartilhada; Redis só entra se medições futuras justificarem |
 | Contrato HTTP | OpenAPI versionado | Implementação e testes devem detectar divergência |
 
 ### 14.2 Banco e transações
 
-- PostgreSQL é a proposta de banco relacional, conforme `../database/BANCO_DE_DADOS.md`.
-- Flyway é a proposta para migrações; a aplicação não executa DDL com sua conta comum.
+- MySQL 8.x é o banco relacional definido em `../database/BANCO_DE_DADOS.md`; a versão LTS exata será homologada antes do desenvolvimento.
+- Flyway é a ferramenta definida para migrações; a aplicação não executa DDL com sua conta comum.
 - Transação cobre o agregado e os registros de histórico/outbox diretamente relacionados.
 - Isolamento, lock e índice são escolhidos por caso; não se usa transação longa durante chamada externa.
 - Consultas são parametrizadas; filtro/ordenação dinâmica usa allowlist.
@@ -569,7 +613,7 @@ sequenceDiagram
     autonumber
     actor U as Aluno
     participant API as Backend
-    participant DB as PostgreSQL
+    participant DB as MySQL
     participant S as Storage privado
     participant AV as Scanner
 
@@ -590,7 +634,9 @@ sequenceDiagram
     end
 ```
 
-Tipos, tamanho, scanner e retenção permanecem bloqueadores para produção do upload.
+Cada justificativa aceita de zero a três arquivos PDF, JPG ou PNG de até 10 MB cada. Quarentena, verificação contra conteúdo malicioso, storage privado e retenção de um ano após a decisão final estão definidos; a tecnologia de storage e o scanner serão homologados com a infraestrutura.
+
+A baseline usa storage privado compatível com S3 e ClamAV para a verificação inicial. Se Prefeitura/Embrass oferecerem soluções equivalentes, somente os adaptadores de storage e scanner mudam; quarentena, autorização, limites, estados, retenção e auditoria permanecem iguais.
 
 ## 15. Cache e invalidação
 
@@ -599,13 +645,13 @@ Cache não faz parte da fonte da verdade e será adicionado apenas com objetivo 
 Baseline proposta:
 
 - notícias publicadas, polos e modalidades podem usar cache HTTP (`ETag`, `Last-Modified`, `Cache-Control`) e CDN com TTL curto;
-- dados autenticados, frequência, posição na fila, permissões e comprovantes não são cacheados no navegador como conteúdo offline por padrão;
+- dados autenticados, posição na fila, permissões e comprovantes não são cacheados no navegador como conteúdo offline; somente o rascunho mínimo de chamada segue a exceção controlada da seção 9.1;
 - cache de servidor, se necessário, usa chave que inclui versão/escopo de autorização e TTL limitado;
 - mudança ou inativação publica invalidação; expiração é fallback, não única garantia para revogação crítica;
 - permissão, sessão e oferta de vaga não dependem de valor stale;
 - falha do cache deve degradar para a fonte da verdade, sem derrubar o banco por avalanche; aplicar limites e proteção contra stampede.
 
-Redis ou equivalente não é decisão aprovada. Pode ser escolhido para sessões, rate limit e cache somente após definir disponibilidade, persistência, segregação e operação de falha.
+Redis ou equivalente não será necessário para as sessões da primeira versão, que ficarão no MySQL. Só poderá ser adicionado futuramente para cache ou limites distribuídos após medições, ADR e definição do comportamento em falha.
 
 ## 16. Integrações externas
 
@@ -624,7 +670,7 @@ Controles mínimos:
 - dashboard/alerta e modo degradado documentado;
 - troca de fornecedor implementada por novo adaptador, preservando porta e domínio.
 
-### 16.2 WhatsApp/mensagens
+### 16.2 WhatsApp/mensagens — expansão futura
 
 - chamado por worker, fora da transação do fluxo principal;
 - envia template e parâmetros mínimos, nunca comprovante, CPF completo, senha ou token;
@@ -632,23 +678,23 @@ Controles mínimos:
 - callback repetido é ignorado idempotentemente;
 - “enviado ao provedor” não é “entregue”;
 - falha final aciona fallback aprovado e fica visível ao suporte;
-- fornecedor, consentimento/base, opt-out, templates, custo e fallback ainda bloqueiam a integração produtiva.
+- a integração real fica fora da primeira versão; notificações internas e e-mail atendem os fluxos atuais até a futura aprovação de fornecedor, modelos, custo e regras institucionais.
 
 ### 16.3 E-mail/recuperação
 
 - mensagem de recuperação contém token opaco de uso único e curta duração;
 - resposta inicial não revela existência de conta;
 - link usa HTTPS, não registra token e invalida sessões quando a política determinar;
-- provedor e domínio/remetente dependem de decisão.
+- é uma integração necessária na primeira versão para confirmação, recuperação, MFA administrativo e comunicação do responsável; provedor e domínio/remetente serão homologados antes da implantação.
 
-### 16.4 Mapas/geocodificação
+### 16.4 Mapas/geocodificação — expansão futura
 
 - somente endereço/coordenada pública de polo ou agregados aprovados atravessam a fronteira;
 - posição/endereço de aluno ou responsável nunca é enviado;
 - falha mantém lista textual/tabular;
 - chave pública no frontend somente se classificada assim pelo fornecedor e restrita por origem/API.
 
-### 16.5 Excel/PDF
+### 16.5 Excel/PDF — expansão futura
 
 - gerador recebe modelo de saída autorizado, não entidade completa;
 - planilha neutraliza formula injection;
@@ -714,7 +760,7 @@ flowchart LR
 
 - TLS em trânsito e redes privadas para banco, storage e management;
 - sessão opaca revogável, proteção CSRF e cookies seguros;
-- MFA e step-up para administração/ações críticas após aprovação;
+- MFA por código de e-mail em todo login administrativo e reautenticação para ações críticas conforme `SEGURANCA.md`;
 - autorização no backend por ação, objeto, vínculo, vigência e campo;
 - rate limit na borda e aplicação, com proteção específica por fluxo;
 - validação allowlist, DTOs, encoding, SQL parametrizado e prevenção de mass assignment;
@@ -725,6 +771,8 @@ flowchart LR
 - CI com testes, SAST, SCA, secret scan, imagem/IaC scan, SBOM e artefato reproduzível;
 - procedimento de rotação/revogação de segredo e sessão comprometidos.
 
+O produto não fixa um fornecedor de cofre ou monitoramento. Segredos usam o cofre ou mecanismo equivalente oferecido pela infraestrutura, com criptografia, acesso por ambiente e rotação. Logs técnicos usam JSON estruturado, e métricas/traces seguem OpenTelemetry; Prefeitura/Embrass homologarão as ferramentas de coleta, visualização e alerta.
+
 ### 18.1 Revogação
 
 | Evento | Ação arquitetural |
@@ -734,18 +782,18 @@ flowchart LR
 | Remoção de papel/inativação | Invalidar autorização e sessões afetadas; não aguardar cache longo |
 | Segredo exposto | Revogar/rotacionar no cofre, atualizar workloads, investigar logs e redeploy se necessário |
 | Chave de fornecedor comprometida | Revogar no fornecedor, trocar no cofre e validar callbacks/uso anormal |
-| Incidente com dado | Conter acessos, preservar evidência, acionar fluxo de incidente e encarregado |
+| Incidente com dado | Conter acessos, preservar evidência e acionar Heitor Leite, Prefeitura/Embrass e os responsáveis institucionais que forem designados antes da implantação |
 
 ## 19. Privacidade e residência de dados
 
 - O backend coleta somente os campos aprovados para a finalidade documentada.
-- Dados de saúde ainda não entram no modelo enquanto finalidade, campos, base e acesso não forem aprovados.
+- A ficha de saúde contém somente os campos aprovados, usa criptografia por campo e tem acesso restrito ao administrador total, administrador parcial autorizado e professor da turma do aluno.
 - Comprovante é potencialmente sensível e fica separado do acesso comum a aluno/frequência.
-- Relatório e mapa aplicam minimização, versão do indicador e limiar de agregação.
+- Relatórios e mapas, quando entrarem em versão futura, aplicarão minimização, versão do indicador e grupo mínimo de três pessoas.
 - Fornecedor recebe somente dados mínimos; transferência internacional e suboperadores exigem avaliação.
 - País/região de banco, storage, backup, logs e fornecedores deve ser registrado antes da contratação/produção.
 - Produção não é copiada para desenvolvimento; dados sintéticos são o padrão.
-- Retenção e descarte seguem `../database/BANCO_DE_DADOS.md`; prazos ainda são bloqueadores.
+- Retenção e descarte seguem os prazos acadêmicos definidos em `../database/BANCO_DE_DADOS.md`; a Prefeitura deverá validá-los antes do uso real.
 - Analytics de frontend, se adotado, não recebe CPF, telefone, e-mail, identificador desnecessário, frequência ou conteúdo sensível.
 
 ## 20. Observabilidade
@@ -779,7 +827,7 @@ flowchart LR
 - autenticação falha, recuperação, revogação e ações administrativas críticas;
 - sucesso, duração e idade do último backup/restore testado.
 
-Alertas precisam de severidade, responsável, canal, cobertura e runbook. Retenção e plataforma estão pendentes.
+Logs operacionais permanecem por 90 dias e auditoria por cinco anos. O funcionamento é verificado a cada minuto e falha crítica deve alertar Heitor Leite em até cinco minutos. A plataforma e os canais operacionais serão alinhados com Prefeitura e Embrass.
 
 ## 21. Disponibilidade, resiliência e desempenho
 
@@ -806,7 +854,7 @@ Alertas precisam de severidade, responsável, canal, cobertura e runbook. Reten�
 | Banco indisponível | Operações dependentes falham rapidamente com resposta segura; não confirmar mutação |
 | Sessão/cache indisponível | Negar com segurança ou ficar indisponível; não aceitar sessão não verificável |
 | Observabilidade indisponível | Aplicação não vaza dados nem bloqueia transação comum, mas gera alerta local/operacional e limita operação de risco conforme política |
-| Conexão cai durante chamada | Não exibir sucesso não confirmado; reconsulta/reenvio idempotente; modo offline depende de `Q-018` |
+| Conexão cai durante chamada | Manter rascunho mínimo não sincronizado por até 24 horas, reenviar com idempotência e só exibir sucesso após confirmação do servidor |
 
 ### 21.3 Escalabilidade
 
@@ -817,7 +865,7 @@ Alertas precisam de severidade, responsável, canal, cobertura e runbook. Reten�
 - CDN/cache atende conteúdo público, não dados sensíveis.
 - Particionamento, réplica analítica e broker somente entram após volume e teste demonstrarem necessidade.
 
-Metas p95, carga, volume, disponibilidade, RPO e RTO ainda são bloqueadoras para dimensionamento final.
+As metas iniciais são p95 de 2 segundos para consultas, 3 segundos para alterações, 5.000 alunos, 200 turmas, 100 usuários simultâneos e 99,5% de disponibilidade mensal. Elas orientam os testes iniciais e serão revistas com dados reais antes da implantação.
 
 ## 22. Backup, recuperação e continuidade
 
@@ -829,9 +877,11 @@ Metas p95, carga, volume, disponibilidade, RPO e RTO ainda são bloqueadoras par
 - Procedimento mede RTO, integridade, contagens e funcionamento de identidade, inscrição, frequência, outbox, auditoria e storage.
 - Correções comuns de release usam rollback/roll-forward de aplicação; restauração de dados só ocorre após avaliar perda e reconciliação.
 
-RPO, RTO, frequência, retenção, região e responsáveis permanecem pendentes.
+A política acadêmica inicial usa backup diário, RPO de 24 horas, RTO de 8 horas e retenção de 30 dias. Prefeitura e Embrass fornecerão a infraestrutura; região, horários, responsáveis operacionais e evidências de restauração serão formalizados antes da implantação.
 
 ## 23. Implantação por ambiente
+
+O SIDESP terá somente dois ambientes permanentes: `desenvolvimento/testes` e `produção`. Execuções temporárias do pipeline não são consideradas um terceiro ambiente e nunca recebem dados ou segredos de produção.
 
 ```mermaid
 flowchart TB
@@ -839,25 +889,16 @@ flowchart TB
     ci["CI\nbuild, testes, scans, SBOM"]
     registry["Registro de artefato/imagem"]
 
-    subgraph dev["Desenvolvimento"]
-        devapp["Backend local/container"]
-        devdb[("Dados sintéticos")]
-    end
-
-    subgraph test["Teste efêmero"]
-        testapp["Artefato do PR"]
-        testdb[("Banco isolado/sintético")]
-    end
-
-    subgraph hml["Homologação"]
-        hmlapp["Frontend + backend"]
-        hmldb[("Dados sintéticos/mascarados aprovados")]
-        hmlstorage[("Storage isolado")]
+    subgraph devtest["Desenvolvimento / testes"]
+        devapp["Angular + API + worker"]
+        devdb[("MySQL com dados sintéticos")]
+        devstorage[("Storage de testes")]
     end
 
     subgraph prod["Produção"]
         prodedge["Borda HTTPS"]
-        prodapp["Backend/worker não root"]
+        prodapi["API não root"]
+        prodworker["Worker não root"]
         proddb[("Banco privado")]
         prodstorage[("Storage privado")]
         prodobs["Observabilidade"]
@@ -866,35 +907,35 @@ flowchart TB
     git --> ci
     ci --> registry
     registry --> devapp
-    registry --> testapp
-    registry --> hmlapp
-    registry -->|"aprovação e mesmo digest"| prodapp
+    registry -->|"aprovações e mesmo digest"| prodapi
+    registry -->|"mesma imagem"| prodworker
     devapp --> devdb
-    testapp --> testdb
-    hmlapp --> hmldb
-    hmlapp --> hmlstorage
-    prodedge --> prodapp
-    prodapp --> proddb
-    prodapp --> prodstorage
-    prodapp --> prodobs
+    devapp --> devstorage
+    prodedge --> prodapi
+    prodapi --> proddb
+    prodapi --> prodstorage
+    prodapi --> prodobs
+    prodworker --> proddb
+    prodworker --> prodstorage
+    prodworker --> prodobs
 ```
 
 | Ambiente | Finalidade | Dados e segredos | Promoção |
 | --- | --- | --- | --- |
-| Local/dev | Desenvolvimento rápido | Sintéticos e segredos locais fictícios/próprios | Sem acesso a produção |
-| Teste efêmero | Testes de PR e integração | Sintéticos; nenhum segredo de produção | Criado/destruído pelo pipeline |
-| Homologação | Aceite integrado e desempenho controlado | Isolados; mascarados somente por exceção formal | Artefato candidato versionado |
-| Produção | Serviço real | Dados e segredos reais, rede privada e acesso nominal | Aprovação, gates e mesmo artefato/digest |
+| Desenvolvimento/testes | Desenvolvimento, integração, testes automáticos, aceite funcional e desempenho controlado | Somente dados sintéticos e segredos exclusivos do ambiente; sem acesso a produção | Gera e valida o candidato de release |
+| Produção | Serviço real | Dados e segredos reais, rede privada e acesso nominal | Mesmo artefato validado, após aprovações e gates |
+
+Antes da produção acadêmica, Kauãn Raphael coordena a liberação, Heitor Leite valida arquitetura, segurança e operação, Micael Phillipini valida os testes e Livia Andrade aprova o produto. Na implantação real, Prefeitura/Embrass também aprovam e executam as ações sob sua responsabilidade.
 
 ### 23.1 Topologia de produção proposta
 
-- frontend estático em hospedagem/CDN aprovada ou servido separadamente da API;
-- proxy/balanceador termina TLS e encaminha somente rotas necessárias;
+- frontend Angular estático e API são publicados sob a mesma origem lógica: `/` para o frontend e `/api/v1` para o backend;
+- proxy/balanceador termina TLS e encaminha somente as rotas necessárias; se a infraestrutura exigir origens separadas, CORS usa lista exata e credenciais somente para a origem homologada;
 - backend e worker em containers mínimos, usuário não root e filesystem somente leitura quando viável;
 - banco, storage, cofre e management em rede privada;
 - egress limitado aos fornecedores aprovados;
 - infraestrutura como código versionada e revisada;
-- provedor, região, orquestrador e custo ainda não definidos.
+- Prefeitura e Embrass fornecerão a infraestrutura; região, orquestrador, capacidade, custos adicionais e responsabilidades operacionais ainda serão formalizados.
 
 ## 24. CI/CD e cadeia de suprimentos
 
@@ -907,9 +948,11 @@ Pipeline mínimo:
 5. analisar imagem, IaC e configurações;
 6. gerar SBOM, checksum e evidência do artefato;
 7. publicar artefato imutável em registro aprovado;
-8. implantar em ambiente isolado e executar smoke/contrato;
+8. implantar em desenvolvimento/testes e executar smoke, contrato, integração e aceite;
 9. exigir aprovações e gates antes de produção;
 10. promover o mesmo digest, registrar deploy e observar pós-implantação.
+
+Migrações Flyway aplicadas não são editadas. A correção para frente é preferencial; retorno para a imagem anterior só ocorre quando ela for compatível com o schema já migrado. Qualquer restauração de dados segue o procedimento de continuidade e considera RPO, reconciliação e auditoria.
 
 Dependência, Action, imagem, plugin, SDK, MCP ou ferramenta de IA também integra a cadeia de suprimentos e deve ter origem, versão, licença e risco avaliados.
 
@@ -932,22 +975,25 @@ Uma estratégia de testes própria ainda deve ser documentada; esta seção defi
 
 ## 26. Decisões e ADRs
 
-As decisões abaixo precisam de ADR próprio antes de serem tratadas como aceitas.
+As decisões abaixo formam o registro arquitetural atual. As já aceitas pela equipe ainda podem receber um arquivo ADR próprio antes da implementação, para preservar alternativas e consequências.
 
-| ADR proposto | Decisão | Estado |
+| ADR | Decisão | Estado |
 | --- | --- | --- |
-| `ADR-001` | Adotar monólito modular em vez de microsserviços na baseline | Proposto |
-| `ADR-002` | Adotar REST/JSON + OpenAPI como contrato principal | Proposto |
-| `ADR-003` | Usar sessão opaca no servidor em vez de token no navegador | Proposto |
-| `ADR-004` | Usar PostgreSQL e Flyway | Proposto |
-| `ADR-005` | Usar outbox transacional e worker antes de broker externo | Proposto |
-| `ADR-006` | Armazenar comprovantes/exportações em storage privado | Proposto |
-| `ADR-007` | Aplicar portas/adaptadores e módulos por domínio | Proposto |
-| `ADR-008` | Manter arquitetura single-tenant no escopo atual | Proposto |
-| `ADR-009` | Selecionar framework e estratégia de hospedagem do frontend | Pendente |
-| `ADR-010` | Selecionar sessão/cache, cofre, observabilidade e hospedagem | Pendente |
-| `ADR-011` | Selecionar fornecedores de WhatsApp, e-mail, mapas e scanner | Pendente |
-| `ADR-012` | Definir estratégia para chamada com conectividade instável | Pendente/bloqueador |
+| `ADR-001` | Adotar monólito modular em vez de microsserviços na baseline | Aceito em 17/08/2026 |
+| `ADR-002` | Adotar REST/JSON + OpenAPI em `/api/v1` como contrato principal | Aceito em 17/08/2026 |
+| `ADR-003` | Usar sessão opaca no servidor, persistida inicialmente no MySQL, em vez de token no navegador | Aceito pelas decisões de identidade e dados |
+| `ADR-004` | Usar MySQL 8.x e Flyway | Aceito em 17/08/2026 |
+| `ADR-005` | Usar outbox transacional e worker antes de broker externo | Aceito em 17/08/2026 |
+| `ADR-006` | Armazenar comprovantes e futuras exportações em storage privado compatível com S3, com ClamAV ou equivalente | Aceito em 17/08/2026; ferramenta equivalente pode ser homologada |
+| `ADR-007` | Aplicar portas/adaptadores e módulos por domínio | Aceito em 17/08/2026 |
+| `ADR-008` | Manter arquitetura para uma única Secretaria no escopo atual | Aceito pelo escopo |
+| `ADR-009` | Usar Angular/TypeScript em `/` e API em `/api/v1` sob a mesma origem lógica | Aceito; origem separada somente se Prefeitura/Embrass exigir |
+| `ADR-010` | Manter sessões no MySQL; usar cofre da infraestrutura e OpenTelemetry com logs JSON | Aceito logicamente; ferramentas físicas serão homologadas |
+| `ADR-011` | Usar ClamAV ou scanner equivalente; homologar fornecedor de e-mail; WhatsApp e mapas ficam para versões futuras | Baseline aceita; e-mail depende da implantação |
+| `ADR-012` | Manter rascunho de chamada criptografado no IndexedDB por até 24 horas | Aceito em 17/08/2026 |
+| `ADR-013` | Gerar uma imagem Spring Boot e executar API e worker separadamente em produção | Aceito em 17/08/2026 |
+| `ADR-014` | Manter somente os ambientes permanentes de desenvolvimento/testes e produção | Aceito em 17/08/2026 |
+| `ADR-015` | Fixar versões LTS/estáveis e usar os nomes acadêmicos de pacote e artefatos aprovados | Aceito em 17/08/2026 |
 
 ADRs substituídos permanecem no histórico com referência à decisão sucessora; não devem ser apagados.
 
@@ -955,15 +1001,16 @@ ADRs substituídos permanecem no histórico com referência à decisão sucessor
 
 | ID | Limite/risco | Impacto | Tratamento |
 | --- | --- | --- | --- |
-| `ARQ-RIS-001` | Regra de faltas conflitante/incompleta | Cancelamento e alerta incorretos | Resolver `Q-001/Q-005` antes do job produtivo |
-| `ARQ-RIS-002` | Estratégia offline não definida | Perda/duplicidade de chamada | Resolver `Q-018`; não exibir sucesso falso |
-| `ARQ-RIS-003` | Matriz de permissões ausente | Escalada ou bloqueio operacional | Aprovar RBAC/segregação antes dos endpoints críticos |
-| `ARQ-RIS-004` | MFA, cofre e sessão não escolhidos | Controle de acesso incompleto | ADR e teste antes de administração produtiva |
+| `ARQ-RIS-001` | Implementação pode divergir das regras aprovadas de faltas e justificativas | Cancelamento ou alerta incorreto | Testes rastreados para requisitos, regras e atividades antes do job produtivo |
+| `ARQ-RIS-002` | Dispositivo compartilhado ou script malicioso pode tentar acessar o rascunho offline | Exposição ou alteração da chamada | IndexedDB criptografado, dados mínimos, CSP, limpeza em logout/sincronização/24 horas e confirmação obrigatória do servidor |
+| `ARQ-RIS-003` | Matriz aprovada pode não ser aplicada em todos os endpoints e jobs | Escalada ou bloqueio operacional | Testes de acesso vertical, horizontal, vínculo e vigência para API e tarefas automáticas |
+| `ARQ-RIS-004` | Ferramentas físicas de cofre e observabilidade dependem da infraestrutura | Segredos ou incidentes mal administrados | Exigir os controles lógicos aprovados e homologar ferramentas com Prefeitura/Embrass antes do ambiente real |
 | `ARQ-RIS-005` | WhatsApp/fallback não contratado | Avisos não entregues e dependência | Manter porta/adaptador e bloquear integração real |
-| `ARQ-RIS-006` | Upload/retention/scanner pendentes | Exposição de dado ou malware | Bloquear fluxo produtivo até aprovação |
+| `ARQ-RIS-006` | S3/ClamAV podem não estar disponíveis na infraestrutura | Exposição de dado ou malware | Aceitar equivalente homologado sem remover quarentena, varredura, autorização e auditoria |
+| `ARQ-RIS-013` | Não existe ambiente separado de homologação | Defeito pode chegar à produção se o aceite for incompleto | Executar integração, aceite, segurança e desempenho em desenvolvimento/testes; exigir aprovações registradas e promover exatamente o artefato validado |
 | `ARQ-RIS-007` | Fórmulas e limiar analítico ausentes | Relatório divergente/reidentificação | Aprovar dicionário de indicadores e privacidade |
-| `ARQ-RIS-008` | Volume, p95, SLO, RPO e RTO ausentes | Infraestrutura sub/superdimensionada | Medir protótipo e aprovar metas antes da contratação |
-| `ARQ-RIS-009` | Provedor/região não escolhidos | Custo, residência e operação incertos | Comparar opções no rito de contratação e registrar ADR |
+| `ARQ-RIS-008` | Metas acadêmicas podem não representar a demanda real | Infraestrutura sub ou superdimensionada | Testar 5.000 alunos, 200 turmas e 100 usuários e revisar com a Prefeitura antes da implantação |
+| `ARQ-RIS-009` | Topologia e região da infraestrutura Prefeitura/Embrass não formalizadas | Residência e operação incertas | Registrar responsabilidades, região, capacidade e recuperação antes da produção |
 | `ARQ-RIS-010` | Monólito pode perder fronteiras internas | Acoplamento e evolução lenta | Testes arquiteturais, ownership de módulos e revisão |
 | `ARQ-RIS-011` | Outbox no banco cresce sem controle | Latência e custo | Índice, lotes, retenção, métricas e plano de broker se necessário |
 | `ARQ-RIS-012` | Relatórios no banco operacional podem competir com transações | Lentidão | Limites; consultas otimizadas; réplica/analítico após evidência |
@@ -994,47 +1041,42 @@ Mudanças que exigem ADR/revisão reforçada incluem banco, autenticação, sess
 | Concorrência e transação | `RF-INS-001` a `RF-INS-004`, `RF-FRQ-003/006`, `RN-009` a `RN-012`, `RN-019`, `RNF-RES-001` | Modelo de dados, fluxos 3 a 7 |
 | Arquivos | `RF-JUS-001`, `RF-REL-002`, `RN-004`, `RNF-SEG-006`, `RNF-PRI-002`, `RNF-EXP-001` | Segurança e modelo de dados |
 | Comunicação/assíncrono | `RF-COM-001`, `RF-COM-002`, `RF-COM-003`, `RF-COM-004`, `RF-INS-004`, `RF-JUS-003`, `RN-020/025`, `RNF-RES-001` | Fluxo 8 e classes de comunicação |
-| Relatórios/análises | `RF-REL-001`, `RF-REL-002`, `RF-REL-003`, `RNF-PRI-003`, `RNF-DSP-001`, `RNF-CAP-001` | Modelo de dados e fluxo 10 |
+| Relatórios/análises futuras | `RF-REL-001`, `RF-REL-002`, `RF-REL-003`, `RNF-PRI-003` | Modelo de dados e fluxo 10; fora da primeira versão |
 | Operação e recuperação | `RNF-DIS-001`, `RNF-OBS-001`, `RNF-POR-001` | Segurança, modelo de dados e fluxo 11 |
-| Conectividade | `RNF-CON-001`, `Q-018` | Atividades, segurança e `ADR-012` futuro |
+| Conectividade | `RNF-CON-001`, `DEC-028`, `DEC-080` | Atividades, segurança e `ADR-012` |
 
-## 30. Pendências bloqueadoras
+## 30. Validações externas antes da implantação real
 
-| ID | Pendência | Bloqueia |
+Não existem decisões arquiteturais acadêmicas em aberto. Os pontos abaixo não impedem a revisão do documento pela equipe, mas precisam ser confirmados antes da implantação com dados reais.
+
+| Item | Validação necessária | Impacto |
 | --- | --- | --- |
-| `Q-001/Q-005` | Regras de falta, justificativa e ordem de eventos | Apuração/cancelamento automático |
-| `Q-003` | Prazo e fallback de oferta | Job de expiração e comunicação |
-| `Q-007/Q-008` | Saúde, menores e vínculo de responsável | Campos/acessos sensíveis |
-| `Q-009/Q-017` | WhatsApp, base, templates, opt-out e fallback | Integração produtiva |
-| `Q-010/Q-011` | Senha, MFA, sessão e matriz de permissões | Identidade/administração produtiva |
-| `Q-013/Q-014` | Indicadores, campos e limiar | Relatórios e mapas produtivos |
-| `Q-015/Q-016` | Retenção, volumes, p95, SLO, RPO e RTO | Dimensionamento e produção |
-| `Q-018` | Operação offline/parcial | Chamada em conectividade instável |
-| `ARQ-Q-001` | Framework e hospedagem do frontend | Build, CORS, CSP e deploy do frontend |
-| `ARQ-Q-002` | Provedor, região e topologia de hospedagem | Infraestrutura, residência, custo e continuidade |
-| `ARQ-Q-003` | Cofre, sessão/cache e observabilidade | Segredos, revogação, rate limit e operação |
-| `ARQ-Q-004` | Scanner, storage e tipos/tamanho de arquivo | Upload produtivo |
-| `ARQ-Q-005` | Estratégia de release, domínio e certificados | Primeira homologação pública/produção |
+| Infraestrutura | Prefeitura/Embrass devem confirmar região, rede, capacidade, containers, DNS, certificados, backup e responsáveis operacionais | Topologia física e continuidade |
+| Ferramentas | Homologar storage S3 ou equivalente, ClamAV ou scanner equivalente, cofre e plataforma compatível com OpenTelemetry | Arquivos, segredos e observabilidade |
+| E-mail | Escolher provedor, domínio/remetente, limites e operação de falha | Confirmação, recuperação, MFA e comunicação de responsáveis |
+| Versões | Fixar no início do desenvolvimento as versões exatas de Java LTS, Spring Boot, Angular e dependências | Build reproduzível e suporte |
+| Capacidade | Executar testes com as metas acadêmicas e revisar a demanda real com o cliente | Dimensionamento e custo |
 
 ## 31. Critérios de aprovação
 
 - [ ] Objetivos, contexto e módulos correspondem ao produto aprovado.
 - [ ] Monólito modular e regras de dependência foram aceitos pela equipe.
-- [ ] Frontend, backend, banco, storage, sessão/cache e integrações possuem responsáveis.
+- [ ] Frontend, backend, banco, storage, sessão e integrações possuem responsáveis para o desenvolvimento e responsáveis institucionais antes da implantação.
 - [ ] Autenticação, MFA, sessão, CSRF e matriz de autorização foram aprovados.
 - [ ] Contrato OpenAPI, erros, idempotência, paginação e limites foram definidos.
 - [ ] Outbox, workers, jobs, retries e falha final foram revisados.
 - [ ] Modelo de dados, transações, migrações e ownership de tabelas estão coerentes.
-- [ ] Upload, exportação, WhatsApp, mapas e e-mail possuem fornecedor/contrato seguro ou continuam bloqueados.
+- [ ] Upload e e-mail possuem ferramentas homologadas; exportações, WhatsApp e mapas permanecem fora da primeira versão.
 - [ ] Logs, métricas, traces, auditoria, alertas e runbooks foram planejados.
 - [ ] SLO, capacidade, RPO, RTO, backup e restore foram aprovados/testáveis.
-- [ ] Ambientes, rede, cofre, CI/CD, artefatos e acesso operacional foram definidos.
+- [ ] Os dois ambientes, rede, cofre, CI/CD, artefatos e acesso operacional foram definidos e validados com Prefeitura/Embrass.
 - [ ] Privacidade, residência, retenção e transferências foram revisadas.
 - [ ] Riscos, dívidas e ADRs possuem responsável e prazo.
-- [ ] Diagramas refletem o estado **proposto**, sem serem apresentados como implantação existente.
+- [ ] Diagramas refletem o estado **planejado**, sem serem apresentados como implantação já existente.
 
 ## 32. Histórico de versões
 
 | Versão | Data | Alteração | Autor |
 | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Arquitetura inicial: contexto, monólito modular, camadas, módulos, APIs, outbox, dados, integrações, implantação, segurança e operação | Heitor Leite |
+| `0.2.0` | 17/08/2026 | Decisões resolvidas: Angular, monólito modular, REST/OpenAPI, MySQL/Flyway, sessões, outbox, origem pública, offline, arquivos, observabilidade, dois ambientes, CI/CD e versões; documento pronto para revisão | Heitor Leite |

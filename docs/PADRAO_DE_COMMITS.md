@@ -8,22 +8,28 @@
 | Campo | Valor |
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
-| Responsável pelo padrão | Heitor Leite — Tech Lead |
-| Equipe | Diego Henrico, Heitor Leite, Kauã Raphael, Lívia Andrade, Luís Mario e Micael Phillipini |
-| Versão | `0.1.0` |
-| Data | 13/08/2026 |
+| Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
+| Responsável de negócio / Scrum Master | Kauãn Raphael |
+| Product Owner | Livia Andrade |
+| QA | Micael Phillipini |
+| Versão | `0.2.0` |
+| Data | 17/08/2026 |
 | Classificação | Interna |
-| Status | Rascunho — não aprovado |
-| Próxima revisão | Ao definir o fluxo Git, a plataforma de hospedagem, a automação de releases ou a ferramenta de gestão de tarefas |
+| Status | **Pronto para revisão — ainda não aprovado para uso da equipe** |
+| Repositório e Pull Requests | GitHub |
+| Gestão do projeto e tarefas | Notion; tarefas usam identificador estável com três dígitos |
+| Documentos relacionados | `../AGENTS.md` `0.2.0`, `SEGURANCA.md` `0.2.0` e demais documentos-base `0.2.0` |
+| Próxima revisão | Antes do início do desenvolvimento ou quando o fluxo Git/release mudar |
 
 ## Aprovações
 
 | Papel | Responsável | Situação | Data |
 | --- | --- | --- | --- |
-| Tech Lead | Heitor Leite | Pendente de revisão | — |
-| Product Owner | Lívia Andrade | Pendente de revisão da rastreabilidade | — |
+| Responsável técnico | Heitor Leite | Pendente de revisão | — |
+| Product Owner | Livia Andrade | Pendente de revisão da rastreabilidade | — |
 | QA | Micael Phillipini | Pendente de revisão dos gates | — |
-| Segurança | Pendente | Não avaliado | — |
+| Segurança e privacidade interna | Heitor Leite | Pendente de revisão | — |
+| Responsável de negócio / Scrum Master | Kauãn Raphael | Pendente de revisão do fluxo | — |
 
 ## 1. Objetivo
 
@@ -42,6 +48,34 @@ Este documento define como a equipe deve registrar mudanças no histórico Git d
 - **NÃO DEVE / PROIBIDO:** prática vedada.
 - **DEVERIA / RECOMENDADO:** prática esperada; ausência exige justificativa.
 - **PODE:** alternativa permitida conforme o contexto.
+
+### 2.1 Glossário técnico
+
+| Termo | Significado no projeto |
+| --- | --- |
+| Git | Ferramenta que registra o histórico das alterações do projeto. |
+| Commit | Registro identificado de uma mudança lógica no Git. |
+| Branch | Linha separada de trabalho criada a partir do histórico do projeto. |
+| Branch principal | Linha oficial e protegida do projeto, chamada `main`. |
+| Pull Request (PR) | Pedido de revisão para integrar uma branch ao histórico principal no GitHub. |
+| Conventional Commits | Convenção que organiza a mensagem pelo tipo, escopo e resultado da mudança. |
+| Escopo | Palavra que identifica a área principal afetada pelo commit. |
+| Issue | Tarefa ou problema registrado no GitHub; pode ser encerrado automaticamente pelo PR. |
+| Task ID | Identificador estável da tarefa no Notion, no formato `SID-001`. |
+| Merge | Integração das alterações de uma branch em outra. |
+| Squash | União dos commits de uma entrega em um único commit final. |
+| Rebase | Reorganização dos commits sobre uma base mais recente, sem criar um commit de merge. |
+| Cherry-pick | Cópia de um commit específico para outra branch. |
+| Revert | Novo commit que desfaz os efeitos de um commit anterior sem apagar o histórico. |
+| Breaking change | Alteração incompatível que exige adaptação de consumidores, dados ou ambientes. |
+| Changelog | Resumo organizado das mudanças publicadas em cada versão. |
+| Tag | Marcador aplicado a um ponto do histórico, normalmente para identificar uma versão. |
+| Assinatura criptográfica | Verificação que associa um commit ou tag a uma identidade e chave autorizadas. |
+| Secret scan | Verificação automática que procura senhas, tokens e outras credenciais incluídas por engano. |
+| Gate/check | Validação automática ou aprovação obrigatória antes do merge. |
+| CI/CD | Automação usada para compilar, testar e, quando autorizado, publicar o sistema. |
+| WIP | Commit temporário de trabalho ainda não pronto para o histórico final. |
+| Versionamento Semântico | Numeração `MAJOR.MINOR.PATCH`: incompatibilidade, funcionalidade compatível e correção compatível, respectivamente. |
 
 ## 3. Formato adotado
 
@@ -63,8 +97,7 @@ feat(inscricao): adiciona entrada automática na lista de espera
 Cria uma entrada ordenada quando a turma não possui vagas.
 Impede posições duplicadas para o mesmo aluno e a mesma turma.
 
-Refs: RF-INS-002, RN-009, UC-INS-03
-Closes: #123
+Refs: SID-001, RF-INS-002, RN-009, UC-INS-03
 ```
 
 ### 3.1 Componentes
@@ -76,7 +109,7 @@ Closes: #123
 | `!` | Somente quando aplicável | Indica alteração incompatível. Também exige rodapé `BREAKING CHANGE`. |
 | Descrição | Sim | Resume objetivamente o resultado da mudança. |
 | Corpo | Quando necessário | Explica motivo, comportamento anterior, novo comportamento, decisões e limitações. |
-| Rodapé | Quando aplicável | Registra requisitos, casos, issues, breaking changes, coautoria ou avisos. |
+| Rodapé | Quando aplicável | Registra requisitos, casos, tarefas, issues, breaking changes, coautoria humana ou avisos. |
 
 ## 4. Idioma e estilo
 
@@ -109,6 +142,8 @@ Evite descrições vagas como:
 - `commit do dia`.
 
 ## 5. Tipos permitidos
+
+A equipe aprovou os tipos abaixo. `security` é uma extensão própria do SIDESP ao Conventional Commits para tornar correções de segurança e privacidade claramente identificáveis.
 
 | Tipo | Quando usar | Exemplo |
 | --- | --- | --- |
@@ -159,6 +194,8 @@ Não use um tipo inventado sem atualizar e aprovar este documento.
 | `relatorio` | Relatórios, indicadores, exportações e mapa de calor |
 | `admin` | Administração, permissões e ações excepcionais |
 
+Os escopos `whatsapp` e `relatorio` ficam reservados às versões futuras e só devem ser usados quando os módulos correspondentes entrarem formalmente no desenvolvimento.
+
 ### 6.2 Áreas técnicas e documentais
 
 | Escopo | Conteúdo |
@@ -181,6 +218,26 @@ Não use um tipo inventado sem atualizar e aprovar este documento.
 - Não liste vários escopos separados por vírgula. Se a mudança for realmente transversal, use `api`, `backend`, `frontend`, `security`, `infra` ou omita o escopo.
 - Evite escopos baseados em nome de pessoa, número de sprint, nome de branch ou arquivo isolado.
 - Um novo escopo recorrente deve ser incluído neste documento.
+
+### 6.4 Branches
+
+O projeto usará GitHub Flow simplificado:
+
+- `main` é a única branch permanente e deve ser protegida;
+- não haverá branch permanente `develop`;
+- cada tarefa usa uma branch curta criada a partir da `main` atualizada;
+- o formato é `<tipo>/SID-<NNN>-<resumo-curto>`;
+- o número possui sempre três dígitos e corresponde à tarefa estável do Notion;
+- tipo e resumo usam minúsculas, sem acentos, espaços ou informação sensível;
+- a branch é removida após o merge, salvo necessidade registrada.
+
+Exemplos:
+
+```text
+feat/SID-001-lista-espera
+fix/SID-023-correcao-chamada
+docs/SID-105-atualiza-requisitos
+```
 
 ## 7. Descrição curta
 
@@ -220,6 +277,8 @@ O corpo é obrigatório quando o título não explica suficientemente:
 - como foi feita migração ou compatibilidade;
 - qual impacto existe em segurança, privacidade ou operação.
 
+Independentemente do tamanho do título, o corpo é obrigatório em alteração incompatível, segurança, migração de banco, infraestrutura/configuração ou mudança que afete mais de um módulo. Em mudança simples e autoexplicativa, ele é opcional.
+
 Modelo recomendado:
 
 ```text
@@ -230,7 +289,7 @@ Novo comportamento e decisões relevantes.
 Limitações, migração ou impacto operacional, quando houver.
 
 Refs: <IDs de documentação>
-Closes: <issue>
+Relates-to: <issue ou tarefa, quando necessário>
 ```
 
 O corpo deve explicar a decisão, não narrar cada linha modificada. O diff já demonstra a implementação.
@@ -242,10 +301,10 @@ O corpo deve explicar a decisão, não narrar cada linha modificada. O diff já 
 | Rodapé | Uso |
 | --- | --- |
 | `Refs:` | Requisitos, regras, casos de uso, controles, ADRs ou tarefas relacionados |
-| `Closes:` | Issue/tarefa resolvida pelo commit ou PR, conforme a plataforma |
-| `Fixes:` | Defeito específico resolvido, quando a equipe optar por este termo |
+| `Closes:` | Somente na descrição do PR, para encerrar uma issue correspondente do GitHub |
+| `Fixes:` | Somente na descrição do PR, como alternativa para encerrar uma issue de defeito |
 | `BREAKING CHANGE:` | Descrição obrigatória da incompatibilidade e do plano de migração |
-| `Co-authored-by:` | Coautoria no formato reconhecido pelo Git |
+| `Co-authored-by:` | Coautoria exclusivamente humana, com consentimento e identidade verdadeira; IA não recebe autoria |
 | `Relates-to:` | Relação sem encerramento automático da tarefa |
 
 ### 9.2 Identificadores do SIDESP
@@ -258,15 +317,16 @@ Quando a mudança implementar ou alterar comportamento documentado, o commit ou 
 - regras de negócio: `RN-009`;
 - casos de uso: `UC-INS-03`;
 - controles de segurança: `SEG-AUTZ-003`;
-- questões/pendências: `Q-003` ou `PSEG-008`;
+- tarefa do Notion: `SID-001`, sempre com três dígitos;
+- issue do GitHub: `#123`, quando existir;
+- dependência institucional ou futura: `PSEG-010`, `PSEG-011` ou `PSEG-012`;
 - decisões de arquitetura: `ADR-001`;
 - testes: `CT-INS-001`, quando definidos.
 
 Exemplo:
 
 ```text
-Refs: RF-INS-002, RN-009, UC-INS-03, SEG-API-008
-Closes: #123
+Refs: SID-001, RF-INS-002, RN-009, UC-INS-03, SEG-API-008
 ```
 
 ### 9.3 Onde colocar a rastreabilidade
@@ -275,6 +335,7 @@ Closes: #123
 - Quando vários commits formam uma única entrega, cada commit DEVERIA citar pelo menos a tarefa e o PR DEVE conter a rastreabilidade completa.
 - Um commit de refatoração interna pode citar apenas a tarefa se não alterar requisito.
 - A referência não substitui teste, documentação ou descrição adequada.
+- `Closes: #123` e `Fixes: #123` ficam somente na descrição do PR; commits usam `Refs:` ou `Relates-to:` para não encerrar issue antes da integração completa.
 
 ## 10. Alterações incompatíveis
 
@@ -299,14 +360,14 @@ Clientes devem migrar para a versão v2 antes da remoção da v1.
 
 BREAKING CHANGE: o campo modalidadeId deixa de aceitar números na API v2.
 Plano de migração: manter v1 por 90 dias e publicar guia de adaptação.
-Refs: ADR-004, RF-INS-001
+Refs: ADR-002, RF-INS-001
 ```
 
 Regras:
 
 - o `!` no cabeçalho e o rodapé `BREAKING CHANGE:` são obrigatórios;
 - o corpo deve declarar consumidores afetados, migração, rollback e prazo de compatibilidade;
-- alteração incompatível exige revisão do Tech Lead e atualização dos contratos/documentos no mesmo PR;
+- alteração incompatível exige revisão de Heitor Leite como responsável técnico e atualização dos contratos/documentos no mesmo PR;
 - incompatibilidade não deve ser escondida sob `refactor`, `chore` ou `fix`.
 
 ## 11. Commits de segurança e privacidade
@@ -379,11 +440,11 @@ Entretanto, não divida artificialmente uma mudança de forma que commits interm
 
 ## 13. Commits temporários e histórico final
 
-- Commits `WIP`, `temp`, `checkpoint`, `fixup!` e `squash!` PODEM ser usados apenas em branch pessoal enquanto a mudança está em andamento, se o fluxo da equipe permitir.
+- Commits `WIP`, `temp`, `checkpoint`, `fixup!` e `squash!` PODEM ser usados apenas na branch curta enquanto a mudança está em andamento.
 - Eles NÃO DEVEM permanecer na branch principal nem no histórico final da entrega.
-- Antes do merge, o autor DEVE organizar o histórico de acordo com este documento.
+- O `squash merge` transforma a entrega em um único commit final válido, usando o título e a descrição aprovados no PR.
 - Reescrever histórico já compartilhado exige coordenação; é PROIBIDO forçar atualização da branch principal.
-- Merge, squash ou rebase será decidido no fluxo Git do projeto. Até essa decisão, recomenda-se squash de commits temporários e preservação de commits lógicos úteis.
+- Rebase e force push não são necessários para “limpar” commits temporários antes do PR; só podem ser usados em branch própria e com cuidado para não sobrescrever trabalho compartilhado.
 
 ## 14. Reverts
 
@@ -403,12 +464,26 @@ Quando possível, use a mensagem gerada por `git revert` e complemente o corpo. 
 
 ## 15. Merges e integração
 
-- A branch principal DEVE ser protegida.
+- A `main` DEVE ser protegida e é a única branch permanente.
 - Mudanças DEVEM entrar por Pull Request, salvo procedimento emergencial formal.
-- O PR DEVE ter checks aprovados e revisão humana independente.
-- Autor não deve ser o único aprovador de autenticação, autorização, criptografia, upload, exportação, permissões, banco produtivo ou pipeline.
+- O método padrão é `squash merge`; o título do PR forma o cabeçalho do commit final e deve seguir este documento.
+- PR comum DEVE ter pelo menos uma aprovação de pessoa diferente do autor.
+- Mudança crítica de segurança, autenticação, autorização, permissões, criptografia, upload, banco ou pipeline exige revisão de Heitor Leite e validação dos testes por Micael Phillipini. Se Heitor for o autor, Micael e mais um integrante devem revisar; ninguém aprova sozinho a própria alteração.
+- Quando o desenvolvimento começar, o GitHub DEVE bloquear merge se falhar o formato do título do PR, compilação, testes, secret scan, análise de dependências, formatação ou análise estática configurada.
 - Merge direto, bypass de gate ou alteração emergencial devem seguir o processo de exceção do `SEGURANCA.md`.
 - O formato da mensagem de merge automática PODE ser definido pela plataforma; os commits e o título do PR devem continuar claros.
+- IA ou agente só cria commit, push, PR, merge, release ou tag mediante pedido humano explícito para a ação correspondente; o pedido já é autorização e não precisa ser repetido, conforme `../AGENTS.md`.
+
+### 15.1 Procedimento emergencial
+
+Commit direto na `main` só é permitido durante incidente crítico em produção quando o fluxo de PR estiver comprovadamente inviável. Nesse caso:
+
+1. Heitor Leite deve autorizar a ação;
+2. o motivo e o risco devem ser registrados sem expor dado sensível;
+3. o commit deve ser assinado;
+4. devem ser executados os testes seguros disponíveis;
+5. a alteração deve ser revisada posteriormente em até 24 horas;
+6. o fluxo normal de PR e os controles afetados devem ser restabelecidos imediatamente.
 
 ## 16. Assinatura e identidade
 
@@ -417,14 +492,15 @@ Quando possível, use a mensagem gerada por `git revert` e complemente o corpo. 
 - Cada integrante DEVE usar conta individual e e-mail aprovado pela equipe.
 - Conta ou credencial compartilhada é PROIBIDA.
 - Nome do autor deve permitir identificar a pessoa responsável.
-- Coautoria deve usar `Co-authored-by:` com consentimento dos participantes.
+- Coautoria humana deve usar `Co-authored-by:` com consentimento dos participantes e identidade verdadeira.
+- IA, agente ou ferramenta NÃO DEVE ser registrada como autora, `Co-authored-by` ou assinatura. A responsabilidade permanece humana, conforme `../AGENTS.md`.
 
 ### 16.2 Assinatura criptográfica
 
-- Commits e tags de release DEVERIAM ser assinados quando a plataforma e os equipamentos estiverem configurados.
-- Assinatura será OBRIGATÓRIA para tags de release e commits feitos diretamente em procedimento emergencial após a equipe aprovar a tecnologia e o processo.
+- Commits comuns não precisam ser assinados inicialmente.
+- Tags de versões publicadas e commits diretos de procedimento emergencial DEVEM ser assinados depois que a equipe configurar e documentar a tecnologia e a recuperação das chaves.
 - Chaves de assinatura devem possuir proprietário, proteção, revogação e rotação.
-- O repositório não deve rejeitar integrantes antes de existir um procedimento documentado de configuração e recuperação.
+- O repositório não deve exigir assinatura nem rejeitar integrantes antes de existir um procedimento documentado de configuração e recuperação.
 
 ## 17. Dados e arquivos proibidos no Git
 
@@ -466,6 +542,16 @@ Se um segredo ou dado real for commitado:
 - Atualização automática de dependência deve ter commit próprio ou grupo coerente, com testes e relatório de segurança/licença.
 - Formatação ampla deve ficar em commit separado para não ocultar mudança funcional.
 
+### 18.1 Versões, tags e changelog
+
+O projeto usa Versionamento Semântico no formato `MAJOR.MINOR.PATCH` e tags com prefixo `v`, por exemplo `v0.1.0`, `v0.2.0` e `v1.0.0`.
+
+- antes de `v1.0.0`, uma incompatibilidade planejada incrementa `MINOR` e uma correção compatível incrementa `PATCH`;
+- a partir de `v1.0.0`, breaking change incrementa `MAJOR`, `feat` compatível incrementa `MINOR` e `fix`/`security` compatível incrementa `PATCH`;
+- a versão é escolhida na preparação da release, não em cada commit isolado;
+- tag publicada deve apontar para commit aprovado da `main` e seguir a assinatura da seção 16.2;
+- o changelog poderá ser gerado a partir dos commits e PRs quando a automação de releases for criada, mantendo revisão humana antes da publicação.
+
 ## 19. Exemplos válidos
 
 ### Funcionalidade
@@ -477,7 +563,6 @@ Salva presença e diário de aula na mesma transação. A operação falha
 integralmente quando o conteúdo não é informado.
 
 Refs: RF-FRQ-003, RF-FRQ-004, RN-014, UC-PRF-02
-Closes: #180
 ```
 
 ### Correção
@@ -651,7 +736,7 @@ Exceção a este padrão deve:
 - ter motivo concreto;
 - ser limitada a um escopo e período;
 - indicar impacto no histórico, automação ou auditoria;
-- ser aprovada pelo Tech Lead;
+- ser aprovada por Heitor Leite como responsável técnico;
 - incluir segurança quando puder afetar rastreabilidade, assinatura ou divulgação;
 - possuir plano para retornar ao padrão.
 
@@ -666,11 +751,12 @@ Commits automáticos de ferramenta podem usar formato próprio somente quando a 
 - [ ] Política de assinatura foi aprovada e possui instruções de configuração.
 - [ ] Pipeline valida formato, segredos e checks obrigatórios.
 - [ ] Segurança revisou divulgação e dados proibidos.
-- [ ] Tech Lead aprovou a versão `1.0`.
+- [ ] Responsável técnico aprovou a versão destinada ao uso da equipe.
 
 ## 26. Histórico de versões
 
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Heitor Leite | Primeira convenção de commits, incluindo formato, tipos, escopos, rastreabilidade, breaking changes, segurança, assinatura, exemplos e checklists | Rascunho |
+| `0.2.0` | 17/08/2026 | Heitor Leite | Responsáveis, glossário, tarefas `SID-NNN`, GitHub Flow, branches curtas, squash merge, mensagens, tipos/escopos, assinatura, aprovações, checks, SemVer, emergência, autoria humana e rastreabilidade alinhados | Pronto para revisão |
 

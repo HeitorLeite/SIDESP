@@ -9,16 +9,16 @@
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
 | Órgão demandante | Secretaria de Esportes de Guaratinguetá |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`, `CASOS_DE_USO.md` `0.2.0`, `CLASSES_OU_COMPONENTES.md` `0.2.0`, `SEGURANCA.md` `0.1.0` |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`, `CASOS_DE_USO.md` `0.2.0`, `CLASSES_OU_COMPONENTES.md` `0.2.0`, `SEGURANCA.md` `0.2.0` |
 | Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
 | Responsável de negócio / Scrum Master | Kauãn Raphael |
 | Product Owner | Livia Andrade |
 | QA | Micael Phillipini |
-| Versão | `0.1.0` |
-| Data | 13/08/2026 |
+| Versão | `0.2.0` |
+| Data | 17/08/2026 |
 | Classificação | Interna |
-| Status | Em refinamento — fluxos propostos, ainda não implementados |
-| Próxima revisão | Após resolução das questões próprias do documento e conferência cruzada |
+| Status | Pronto para revisão — fluxos propostos, ainda não implementados |
+| Próxima revisão | Revisão formal e aprovação pela equipe |
 
 ## Aprovações
 
@@ -82,7 +82,7 @@ Foram priorizados:
 | `COMPENSAÇÃO` | Ação posterior que reverte/neutraliza um efeito já confirmado |
 | `IDEMPOTENTE` | Repetição retorna o mesmo efeito ou estado, sem duplicidade |
 
-Todos os fluxos estão no estado **Proposto**. Uma pendência destacada não deve ser preenchida por decisão técnica isolada.
+Todos os fluxos continuam no estado **Proposto**, pois ainda não existe implementação. As decisões funcionais desta versão estão fechadas; itens futuros ou institucionais permanecem identificados sem bloquear a revisão acadêmica.
 
 ### 2.3 Regras comuns
 
@@ -185,7 +185,7 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; canal e expiração definidos; alcance da revogação de sessões em refinamento |
+| Status | Proposto; canal, expiração e revogação de sessões definidos |
 | Atores | Usuário, frontend Angular, API Spring Boot, banco e serviço de e-mail |
 | Casos/requisitos | `UC-IDN-03`; `RF-IDN-003`; `SE003` |
 | Segurança | `SEG-IDN-002/009/010`, `SEG-SES-006`, `SEG-API-007` |
@@ -272,7 +272,7 @@ flowchart LR
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; regras de elegibilidade e resultados diretos definidos; regra final de critérios seletivos em refinamento |
+| Status | Proposto; elegibilidade, resultados diretos e avaliação seletiva definidos |
 | Atores | Aluno, frontend, backend e banco |
 | Casos/requisitos | `UC-INS-01/02/03`; `RF-INS-001/002`; `RN-001`, `RN-008`, `RN-009`, `RN-012`, `RN-018` |
 | Segurança | `SEG-AUTZ-003/004`, `SEG-API-007/008`, `SEG-RES-002` |
@@ -345,17 +345,103 @@ flowchart LR
 - duas solicitações pela última vaga não podem ultrapassar a capacidade.
 - repetir a mesma chave retorna o resultado já persistido.
 - o mesmo aluno não possui inscrição ou entrada ativa duplicada na turma.
-- candidatura não confirma vaga antes da decisão administrativa.
+- candidatura não confirma vaga antes da decisão humana autorizada.
+
+### 5.2 Avaliação do processo seletivo
+
+| Campo | Valor |
+| --- | --- |
+| Status | Proposto; fluxo e responsáveis definidos |
+| Atores | Professor vinculado e designado como avaliador, administrador autorizado, frontend, backend, banco e notificação |
+| Casos/requisitos | `UC-ADM-08`; `RF-INS-007`; `RN-012`, `RN-018` |
+| Segurança | Autorização por turma, permissão administrativa, controle de concorrência e auditoria completa |
+| Decisões aplicadas | Resultado humano; critérios não decidem automaticamente; justificativa ao aprovar com obrigatório não atendido; capacidade obrigatória; primeira decisão concorrente prevalece |
+
+```mermaid
+flowchart LR
+    subgraph E["Professor ou administrador avaliador"]
+        direction TB
+        E0(["Início"])
+        E1["Abrir o Kanban da turma"]
+        E2["Marcar ATENDEU ou NAO_ATENDEU por critério"]
+        E3["Escolher APROVADO ou REPROVADO"]
+        E4["Justificar aprovação excepcional, quando exigido"]
+        E5(["Decisão registrada"])
+        E6(["Candidatura permanece EM_ANALISE"])
+        E7(["Avaliação não alterada"])
+    end
+
+    subgraph F["Frontend Angular"]
+        direction TB
+        F1["Exibir critérios versionados e situação da capacidade"]
+        F2["Enviar avaliações, decisão e versão lida"]
+        F3["Exibir falta de capacidade ou validação"]
+        F4["Exibir estado atualizado após conflito"]
+    end
+
+    subgraph B["API Spring Boot / domínio"]
+        direction TB
+        B1["Autenticar e verificar autorização para a turma"]
+        B2{"Professor vinculado e designado ou administrador com permissão?"}
+        B3["Carregar candidatura, critérios e versão atual"]
+        B4["Validar avaliações e decisão humana"]
+        B5{"A versão continua igual?"}
+        B6{"Decisão é APROVADO?"}
+        B7{"Há critério obrigatório não atendido?"}
+        B8{"Justificativa específica foi informada?"}
+        B9{"Há capacidade disponível?"}
+        B10["Registrar aprovação e criar inscrição"]
+        B11["Registrar reprovação"]
+        B12["Guardar avaliações sem concluir a aprovação"]
+        B13["Criar evento de resultado"]
+    end
+
+    subgraph D["MySQL"]
+        direction TB
+        D1["Bloquear candidatura e conferir versão"]
+        D2["COMMIT: avaliações + decisão + histórico + inscrição/outbox"]
+        D3["COMMIT: avaliações mantendo EM_ANALISE"]
+        D4["ROLLBACK sem sobrescrever a primeira decisão"]
+    end
+
+    subgraph N["Notificação"]
+        direction TB
+        N1["Avisar aluno e responsável quando menor"]
+    end
+
+    E0 --> E1 --> B1 --> B2
+    B2 -->|"não"| E7
+    B2 -->|"sim"| B3 --> F1 --> E2 --> E3 --> F2 --> B4 --> D1 --> B5
+    B5 -->|"não"| D4 --> F4 --> E7
+    B5 -->|"sim"| B6
+    B6 -->|"REPROVADO"| B11 --> B13 --> D2 --> N1 --> E5
+    B6 -->|"APROVADO"| B7
+    B7 -->|"não"| B9
+    B7 -->|"sim"| B8
+    B8 -->|"não"| F3 --> E4 --> F2
+    B8 -->|"sim"| B9
+    B9 -->|"não"| B12 --> D3 --> F3 --> E6
+    B9 -->|"sim"| B10 --> B13 --> D2 --> N1 --> E5
+```
+
+#### 5.2.1 Aceite e concorrência
+
+- professor só avalia quando possui vínculo vigente com a turma e designação explícita como avaliador; administrador precisa da permissão correspondente.
+- critérios obrigatórios e opcionais orientam a decisão, mas não aprovam nem reprovam automaticamente.
+- aprovação com algum critério obrigatório `NAO_ATENDEU` exige justificativa específica e auditável.
+- sem capacidade, a candidatura continua `EM_ANALISE`; aprovação só é concluída quando surgir vaga ou quando administrador total executar exceção de capacidade justificada.
+- duas decisões concorrentes não se sobrescrevem: a primeira confirmada pelo banco prevalece e a segunda recebe o estado atual.
+- somente administrador total corrige uma decisão final, conforme o fluxo compensatório já definido.
 
 ## 6. Fluxo crítico 4 — oferta e confirmação de vaga
 
 | Campo | Valor |
 | --- | --- |
-| Status | Proposto; prazo e canal obrigatório definidos |
+| Status | Proposto; prazo, canal e tratamento de indisponibilidade definidos |
 | Atores | Processo automático, aluno, backend, banco e serviço de notificação |
 | Casos/requisitos | `UC-AUT-01`, `UC-INS-05/07`; `RF-INS-004`; `RN-010`, `RN-011` |
 | Segurança | `SEG-API-008`, `SEG-RES-002/003`, `SEG-WA-*` |
-| Decisões aplicadas | Oferta por 48 horas corridas desde o registro e a notificação interna; WhatsApp fica fora da primeira versão; recusa ou expiração avança a fila sem duplicidade |
+| Decisões aplicadas | Oferta por 48 horas de disponibilidade desde o registro e a notificação interna; indisponibilidade oficial pausa o prazo; WhatsApp fica fora da primeira versão; recusa ou expiração avança a fila sem duplicidade |
 
 ```mermaid
 flowchart LR
@@ -377,6 +463,7 @@ flowchart LR
         W8["Marcar evento processado"]
         W9["Encerrar sem oferta"]
         W10["Ao expirar, liberar reserva e repetir para próximo"]
+        W11["Descontar indisponibilidades oficiais do prazo"]
     end
 
     subgraph D["Banco"]
@@ -429,7 +516,7 @@ flowchart LR
     B3 -->|"não"| B6 --> U5
     B3 -->|"sim e confirmar"| B4 --> D3 --> U3
     B3 -->|"sim e recusar"| B5 --> D4 --> U4
-    W6 -. "prazo atingido" .-> W10 --> D4 -.-> W1
+    W6 -. "prazo nominal atingido" .-> W11 --> W10 --> D4 -.-> W1
 ```
 
 ### 6.1 Aceite e compensação
@@ -437,6 +524,7 @@ flowchart LR
 - uma vaga mantém no máximo uma oferta ativa.
 - confirmação e recusa só podem ocorrer na área autenticada `Minhas ofertas`; e-mail ou notificação apenas direciona o aluno para essa tela.
 - apagar a notificação não cancela nem oculta a oferta ativa da área `Minhas ofertas`.
+- indisponibilidade oficial registrada do SIDESP pausa o prazo, que continua após a recuperação; falha particular de conexão do aluno não pausa a oferta.
 - falha de mensagem não oferece a vaga simultaneamente ao próximo; o fallback e o prazo devem ser definidos.
 - confirmação concorrente com expiração produz um único estado final transacional.
 - recusa/expiração gera nova vaga de forma idempotente.
@@ -1085,11 +1173,12 @@ flowchart LR
 | Autenticação | `RF-IDN-002`, `RN-017`, RNFs de segurança | `UC-IDN-02` | `Usuario`, `Credencial`, `Sessao`, `ServicoAutenticacao` | `CT-IDN-*`: enumeração, MFA, rate limit, sessão |
 | Recuperação | `RF-IDN-003` | `UC-IDN-03` | `TokenRecuperacao`, `Credencial`, `Sessao` | token expirado/replay, resposta neutra, rollback |
 | Inscrição | `RF-INS-001/002`, `RN-001/008/009/012/018` | `UC-INS-02/03` | `Inscricao`, `EntradaListaEspera`, `PoliticaElegibilidade` | concorrência, idempotência, capacidade, seleção |
-| Oferta de vaga | `RF-INS-004`, `RN-010/011` | `UC-AUT-01`, `UC-INS-07` | `OfertaVaga`, `ServicoListaEspera` | expiração x confirmação, uma oferta por vaga |
+| Processo seletivo | `RF-INS-007`, `RN-012/018` | `UC-ADM-08` | `CandidaturaSelecao`, `CriterioSelecao`, `AvaliacaoCriterio` | autorização por turma, justificativa excepcional, concorrência e capacidade |
+| Oferta de vaga | `RF-INS-004`, `RN-010/011` | `UC-AUT-01`, `UC-INS-07` | `OfertaVaga`, `ServicoListaEspera` | expiração x confirmação, pausa oficial, uma oferta por vaga |
 | Chamada | `RF-FRQ-002/003/004`, `RN-013/014/019` | `UC-PRF-02/03` | `Chamada`, `DiarioAula`, `RegistroFrequencia` | vínculo, atomicidade, repetição, queda de rede |
 | Justificativa | `RF-JUS-*`, `RN-003/004/024/025` | `UC-JUS-*`, `UC-ADM-09` | `JustificativaFalta`, `ArquivoComprovante`, `DecisaoJustificativa` | upload, malware, IDOR, decisão e compensação |
 | Apuração de faltas | `RF-COM-002/003`, `RN-002/005/006/007` | `UC-AUT-02/03` | `PoliticaFaltas`, `Inscricao`, outbox | regra, reprocessamento, justificativa pendente |
-| WhatsApp | `RF-COM-001/004`, `RN-020` | `UC-COM-*` | `ItemOutbox`, `TentativaEntrega`, `WhatsAppAdapter` | timeout, retry, assinatura, replay, fallback |
+| Notificações/WhatsApp futuro | `RF-COM-001/004/005/006`, `RN-020` | `UC-COM-*` | `ItemOutbox`, `TentativaEntrega`, `EmailAdapter`, futuro `WhatsAppAdapter` | timeout, retry, assinatura, replay, fallback |
 | Permissões | `RF-ADM-007`, `RN-017/022` | `UC-ADM-12` | `Papel`, `Permissao`, `AtribuicaoPapel` | autoelevação, MFA, revogação, auditoria |
 | Exportação | `RF-REL-*`, RNFs de privacidade/exportação | `UC-REL-*` | `PoliticaAgregacao`, `ExportacaoRelatorio` | reidentificação, formula injection, expiração |
 | Incidente | Controles `SEG-*` | Operacional | comando de incidente, logs, backup e runbook | tabletop, segredo exposto, restore e comunicação |
@@ -1101,7 +1190,8 @@ flowchart LR
 | Login | Sessão opaca ativa | Nenhuma sessão e resposta genérica | Revogar sessão se estado posterior ficar inconsistente |
 | Recuperação | Senha alterada, token usado e sessões tratadas | Tudo inalterado | Revogar token/sessões em caso de suspeita |
 | Inscrição | Inscrição, fila ou candidatura única | Transação desfeita | Reconciliar vaga/fila por job idempotente |
-| Oferta | Uma confirmação ou avanço ao próximo | Oferta permanece consistente | Expirar/liberar reserva e reprocessar |
+| Processo seletivo | Decisão e inscrição consistentes, ou `EM_ANALISE` sem capacidade | Conflito não sobrescreve decisão anterior | Correção exclusiva do administrador total e compensação auditada |
+| Oferta | Uma confirmação ou avanço ao próximo | Oferta permanece consistente, com pausa oficial calculada | Expirar/liberar reserva e reprocessar |
 | Chamada | Chamada, diário e registros atômicos | Nenhum registro parcial | Correção administrativa versionada |
 | Justificativa | Arquivo aprovado e justificativa em análise | Arquivo rejeitado/órfão removido | Descartar arquivo, reprocessar scanner ou corrigir decisão formalmente |
 | Cancelamento por faltas | Cancelamento e vaga liberada uma vez | Pendência operacional sem cancelamento inseguro | Reativação/reconciliação formal se correção mudar cálculo |
@@ -1134,15 +1224,19 @@ As antigas questões `Q-001` a `Q-021` já foram resolvidas no Levantamento de R
 | `Q-ATV-009` | Oferta só é confirmada ou recusada dentro do SIDESP autenticado; mensagens apenas direcionam para `Minhas ofertas`. | Oferta de vaga | Aceita em 14/08/2026 |
 | `Q-ATV-010` | Apagar a notificação não cancela a oferta, que permanece em `Minhas ofertas` até resposta ou expiração. | Oferta e notificações | Aceita em 14/08/2026 |
 
-### 16.3 Questões ainda em refinamento
+### 16.3 Terceira rodada de decisões
 
-| ID | Decisão necessária | Fluxos afetados |
-| --- | --- | --- |
-| `Q-ATV-011` | Definir quais professores podem avaliar um processo seletivo. | Inscrição e seleção |
-| `Q-ATV-012` | Definir se aprovação com critério obrigatório não atendido exige justificativa adicional. | Inscrição e seleção |
-| `Q-ATV-013` | Definir o resultado de duas avaliações simultâneas da mesma candidatura. | Inscrição e seleção |
-| `Q-ATV-014` | Definir o comportamento quando não houver capacidade no momento da aprovação. | Inscrição e seleção |
-| `Q-ATV-015` | Definir o efeito de indisponibilidade do SIDESP durante o prazo de uma oferta. | Oferta de vaga |
+| ID | Decisão | Fluxos afetados | Situação |
+| --- | --- | --- | --- |
+| `Q-ATV-011` | Professor precisa estar vinculado à turma e designado como avaliador; administrador precisa da permissão correspondente. | Inscrição e seleção | Aceita em 17/08/2026 |
+| `Q-ATV-012` | Aprovação com critério obrigatório não atendido exige justificativa específica. | Inscrição e seleção | Aceita em 17/08/2026 |
+| `Q-ATV-013` | Em decisões simultâneas, a primeira confirmada prevalece; a segunda não sobrescreve e correção final é exclusiva do administrador total. | Inscrição e seleção | Aceita em 17/08/2026 |
+| `Q-ATV-014` | Sem capacidade, a candidatura permanece `EM_ANALISE` até surgir vaga ou existir exceção de capacidade do administrador total. | Inscrição e seleção | Aceita em 17/08/2026 |
+| `Q-ATV-015` | Indisponibilidade oficial do SIDESP pausa o prazo da oferta; falha particular de internet não pausa. | Oferta de vaga | Aceita em 17/08/2026 |
+
+### 16.4 Situação das decisões
+
+Não restam decisões funcionais abertas para os diagramas desta versão. WhatsApp, relatórios, exportações e mapas continuam fora da primeira versão e deverão receber novo refinamento quando entrarem no backlog de desenvolvimento. Ferramentas específicas de infraestrutura, verificação de arquivos e observabilidade serão detalhadas na Arquitetura e na Segurança antes da implementação.
 
 ## 17. Critérios de aprovação
 
@@ -1153,7 +1247,7 @@ As antigas questões `Q-001` a `Q-021` já foram resolvidas no Levantamento de R
 - [ ] Arquivos e dados sensíveis foram avaliados por segurança/privacidade.
 - [ ] Timeout, retry, webhook e falha de fornecedor possuem comportamento definido.
 - [ ] Auditoria está presente sem registrar conteúdo proibido.
-- [ ] Pendências bloqueadoras foram resolvidas ou formalmente aceitas.
+- [x] Pendências bloqueadoras foram resolvidas ou formalmente adiadas para versão futura.
 - [ ] Diagramas concordam com requisitos, casos de uso, classes e segurança.
 - [ ] QA derivou cenários de teste para todos os ramos críticos.
 - [ ] Responsáveis de negócio, técnico, segurança, privacidade e operações aprovaram suas competências.
@@ -1163,3 +1257,4 @@ As antigas questões `Q-001` a `Q-021` já foram resolvidas no Levantamento de R
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Heitor Leite | Primeira versão com onze fluxos críticos em raias, incluindo sucesso, erros, autorização, concorrência, arquivos, integrações, compensação, auditoria e incidente | Rascunho |
+| `0.2.0` | 17/08/2026 | Heitor Leite | Incorporação das decisões aprovadas; atualização de autenticação, inscrição, seleção, oferta, chamada offline, justificativas, faltas, notificações, permissões e incidente; inclusão do fluxo detalhado de avaliação seletiva e glossário técnico | Pronto para revisão |

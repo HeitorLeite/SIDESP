@@ -16,7 +16,7 @@
 | Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
 | QA | Micael Phillipini |
 | Versão | `0.2.0` |
-| Data | 14/08/2026 |
+| Data | 17/08/2026 |
 | Classificação | Interna |
 | Status | Pronto para revisão — não aprovado |
 | Próxima revisão | Revisão formal e aprovação pela equipe |
@@ -59,7 +59,7 @@ Os diagramas foram divididos por domínio para preservar a legibilidade. Todos r
 | Usuário cadastrado | Humano abstrato | Generaliza comportamentos comuns de aluno, professor e administrador, como autenticação e recuperação de acesso. |
 | Aluno | Humano | Gerenciar a própria participação, consultar os próprios dados e enviar justificativa de falta. |
 | Responsável legal | Humano | Não possui conta própria. Confirma o vínculo do menor por e-mail e recebe por e-mail as comunicações importantes da primeira versão. WhatsApp será um canal adicional futuro. |
-| Professor | Humano | Atuar somente nas turmas às quais estiver vinculado, realizar chamadas, registrar diário e enviar avisos. |
+| Professor | Humano | Atuar nas turmas vinculadas, realizar chamada/diário, enviar avisos e avaliar processo seletivo quando estiver explicitamente designado. |
 | Administrador parcial | Humano | Executar somente as funções concedidas individualmente pelo administrador total. |
 | Administrador total | Humano | Possuir todas as áreas administrativas, conceder permissões, executar exceções permitidas e corrigir erro administrativo de processo seletivo. |
 | Gestor autorizado | Humano | Papel futuro para consultar relatórios e análises, quando esses recursos forem definidos pela Secretaria. |
@@ -606,10 +606,10 @@ WhatsApp, relatórios, exportações, mapa de calor e mapas públicos permanecem
 | --- | --- |
 | Ator principal | Aluno |
 | Objetivo | Aceitar ou recusar a vaga temporariamente oferecida pela fila. |
-| Pré-condições | Oferta ativa, pertencente ao aluno, ainda dentro do prazo e com vaga reservada. |
+| Pré-condições | Oferta ativa, pertencente ao aluno, dentro das 48 horas de disponibilidade e com vaga reservada. |
 | Gatilho | O aluno entra no SIDESP, abre `Minhas ofertas` e escolhe confirmar ou recusar. |
 | Fluxo principal | 1. O sistema valida sessão, propriedade, prazo e estado. 2. Ao confirmar, converte a oferta em inscrição e encerra a entrada da fila. 3. Ao recusar, libera a reserva e aciona o próximo elegível. 4. Registra o resultado. E-mail e notificação apenas direcionam para a área autenticada. |
-| Alternativas e erros | Oferta expirada, já consumida ou concorrência no limite: negar com estado atual; nunca confirmar duas pessoas para a mesma reserva. Apagar a notificação não cancela a oferta, que continua em `Minhas ofertas` até resposta ou expiração. |
+| Alternativas e erros | Oferta expirada, já consumida ou concorrência no limite: negar com estado atual; nunca confirmar duas pessoas para a mesma reserva. Apagar a notificação não cancela a oferta. Indisponibilidade oficial do SIDESP pausa o prazo; falha particular de internet não pausa. |
 | Pós-condições | Inscrição confirmada ou vaga encaminhada ao próximo. |
 | Permissão, dados e auditoria | Somente destinatário da oferta; registrar decisão e instante. |
 | Requisitos relacionados | `RF-INS-004`, `RN-010/011`; caso novo. |
@@ -933,14 +933,14 @@ WhatsApp, relatórios, exportações, mapa de calor e mapas públicos permanecem
 | --- | --- |
 | Ator principal | Professor ou administrador responsável pelo processo seletivo |
 | Objetivo | Avaliar candidaturas de turmas seletivas em fluxo Kanban aprovado. |
-| Pré-condições | Turma marcada como seletiva; candidatura existente; critérios configurados para a modalidade e a faixa etária. |
-| Gatilho | O administrador abre o painel ou move uma candidatura. |
-| Fluxo principal | 1. O sistema lista candidaturas nas cinco colunas. 2. Carrega a versão dos critérios em texto aplicável à modalidade e idade. 3. O professor ou administrador responsável marca `ATENDEU` ou `NÃO ATENDEU` em cada critério e pode escrever observação. 4. Os resultados orientam, mas não aprovam nem reprovam automaticamente. 5. O avaliador registra a decisão humana final. 6. O sistema valida estado, permissão e capacidade e registra versão, avaliações, autor, instante e decisão. |
-| Alternativas e erros | Transição inválida, falta de critério ou capacidade: bloquear. Na primeira versão, o aluno não pode recorrer de `APROVADO` ou `REPROVADO`. Antes de a aprovação gerar matrícula, erro administrativo pode ser corrigido diretamente pelo administrador total, com motivo e auditoria. Depois da matrícula, a correção ocorre em operação separada: mudar de aprovado para reprovado cancela a matrícula e libera a vaga; mudar de reprovado para aprovado exige vaga disponível ou uma exceção de capacidade separada e justificada. Nenhuma correção muda a ordem dos candidatos ou os critérios. |
-| Pós-condições | Candidatura em estado final rastreável, sem vaga confirmada antes da aprovação. |
-| Permissão, dados e auditoria | Professor ou administrador com autorização compatível pode avaliar; o alcance da autorização do professor ainda será concluído no Diagrama de Atividades. Somente administrador total corrige erro. Toda transição e correção registra antes/depois, motivo, autor e instante. |
+| Pré-condições | Turma seletiva; candidatura e critérios configurados; professor com vínculo vigente e designação de avaliador ou administrador com permissão correspondente. |
+| Gatilho | O professor ou administrador responsável abre o painel e inicia a avaliação. |
+| Fluxo principal | 1. O sistema lista candidaturas nas cinco colunas e carrega critérios/versionamento. 2. O avaliador marca `ATENDEU` ou `NÃO ATENDEU`. 3. Registra a decisão humana final. 4. Se aprovar com obrigatório não atendido, informa justificativa específica. 5. O sistema confere versão e capacidade. 6. Com vaga, grava avaliações, decisão, autor, histórico e inscrição em uma transação. 7. Sem vaga, guarda avaliações e mantém `EM_ANÁLISE`. |
+| Alternativas e erros | Sem autorização: negar. Duas decisões simultâneas: a primeira confirmada prevalece e a segunda recebe o estado atual sem sobrescrever. Sem justificativa excepcional ou capacidade: não aprovar. Administrador total pode executar exceção de capacidade justificada. O aluno não recorre; somente administrador total corrige erro, com compensação quando já houver matrícula. |
+| Pós-condições | Candidatura aprovada/reprovada de forma rastreável ou mantida `EM ANÁLISE` por falta de capacidade; nenhuma vaga é confirmada antes da aprovação válida. |
+| Permissão, dados e auditoria | Professor precisa de vínculo vigente e designação explícita; administrador precisa da permissão correspondente. Somente administrador total corrige decisão final. Toda avaliação, justificativa excepcional, transição, conflito e correção registra autor, instante e antes/depois. |
 | Requisitos relacionados | `RF-INS-007`, `RN-018`; legado `UC32`. |
-| Critério de aceite | Nenhuma candidatura obtém vaga sem decisão autorizada; não há recurso do aluno; correção posterior à matrícula produz compensação rastreável e nunca ignora capacidade sem exceção formal. |
+| Critério de aceite | Nenhuma candidatura obtém vaga sem decisão autorizada e capacidade; concorrência não sobrescreve a primeira decisão; obrigatório não atendido exige justificativa para aprovação; correção posterior à matrícula produz compensação rastreável. |
 
 Regra complementar aprovada durante o refinamento das atividades: cada critério seletivo indica se é obrigatório ou opcional, mas nenhum resultado toma a decisão automaticamente. A decisão final pertence ao professor ou administrador responsável pelo processo.
 
@@ -1094,7 +1094,7 @@ Regra complementar aprovada durante o refinamento das atividades: cada critério
 | Objetivo | Reservar e oferecer uma vaga ao primeiro aluno elegível da fila. |
 | Pré-condições | Vaga liberada; fila não vazia; nenhuma oferta ativa ocupando a vaga. |
 | Gatilho | Cancelamento, aumento de capacidade, expiração/recusa anterior ou reconciliação autorizada. |
-| Fluxo principal | 1. O sistema bloqueia a vaga/fila. 2. Seleciona o primeiro elegível. 3. Cria oferta única com prazo de 48 horas corridas. 4. Reserva a vaga. 5. Cria notificação interna e, se o aluno for menor, envia e-mail ao responsável. 6. Aguarda `UC-INS-07`; na expiração, avança ao próximo. |
+| Fluxo principal | 1. O sistema bloqueia a vaga/fila. 2. Seleciona o primeiro elegível. 3. Cria oferta única com 48 horas de disponibilidade. 4. Reserva a vaga. 5. Cria notificação interna e, se o aluno for menor, envia e-mail ao responsável. 6. Pausa o prazo durante indisponibilidade oficial registrada do SIDESP. 7. Aguarda `UC-INS-07`; na expiração, avança ao próximo. |
 | Alternativas e erros | Candidato deixou de ser elegível: registrar e avaliar o próximo. Falha de e-mail: manter oferta e prazo, registrar a falha e tentar novamente sem oferecer a duas pessoas ao mesmo tempo. |
 | Pós-condições | Uma oferta ativa ou fila esgotada; histórico preservado. |
 | Permissão, dados e auditoria | Processo autenticado; posição, candidato, prazo e resultado auditados. |
@@ -1197,7 +1197,7 @@ Logs e auditoria não devem registrar senha, token, cookie, segredo de integraç
 
 ## 14. Decisões incorporadas
 
-As antigas questões `Q-001` a `Q-023` foram resolvidas no `LEVANTAMENTO_DE_REQUISITOS.md` versão `0.2.0` e já orientam estes casos. Entre elas estão: limite de faltas por modalidade, duas modalidades simultâneas, oferta por 48 horas corridas, regras de menores e saúde, segurança de acesso, justificativas, funcionamento com internet instável, permissões administrativas, capacidade, retenção e escopo da primeira versão.
+As antigas questões `Q-001` a `Q-023` foram resolvidas no `LEVANTAMENTO_DE_REQUISITOS.md` versão `0.2.0` e já orientam estes casos. Entre elas estão: limite de faltas por modalidade, duas modalidades simultâneas, oferta por 48 horas de disponibilidade, regras de menores e saúde, segurança de acesso, justificativas, funcionamento com internet instável, permissões administrativas, capacidade, retenção e escopo da primeira versão.
 
 As cinco decisões mais recentes também foram incorporadas:
 
@@ -1247,5 +1247,5 @@ Não restam decisões funcionais abertas para a revisão desta versão. WhatsApp
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 12/08/2026 | Heitor Leite | Refinamento dos diagramas do Documento de Visão; divisão por domínio; inclusão de atores externos, especificações textuais, permissões, auditoria, pendências e rastreabilidade com requisitos | Rascunho |
-| `0.2.0` | 14/08/2026 | Heitor Leite | Incorporação das decisões do levantamento e das questões específicas; atualização de atores, primeira versão, e-mail, fila, seleção, aulas, privacidade, permissões e integrações futuras; ajustes transversais confirmados na modelagem de classes | Pronto para revisão |
+| `0.2.0` | 17/08/2026 | Heitor Leite | Incorporação das decisões do levantamento, classes e atividades; atualização de atores, e-mail, fila, seleção humana por professor/administrador autorizado, concorrência, capacidade, pausa oficial de oferta, privacidade, permissões e integrações futuras | Pronto para revisão |
 

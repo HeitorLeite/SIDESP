@@ -9,14 +9,14 @@
 | --- | --- |
 | Projeto | SIDESP — Sistema Integrado de Desenvolvimento Esportivo Público |
 | Órgão demandante | Secretaria de Esportes de Guaratinguetá |
-| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`; `CASOS_DE_USO.md` `0.2.0`; `SEGURANCA.md` `0.1.0` |
+| Documentos relacionados | `LEVANTAMENTO_DE_REQUISITOS.md` `0.2.0`; `CASOS_DE_USO.md` `0.2.0`; `SEGURANCA.md` `0.2.0` |
 | Fonte inicial | Documento de Visão — SIDESP, versão `1.0`, seção 6.4 |
 | Responsável técnico / Segurança / Privacidade interna | Heitor Leite |
 | Responsável de negócio / Scrum Master | Kauãn Raphael |
 | Product Owner | Livia Andrade |
 | QA | Micael Phillipini |
 | Versão | `0.2.0` |
-| Data | 14/08/2026 |
+| Data | 17/08/2026 |
 | Classificação | Interna |
 | Status | Pronto para revisão — modelo proposto, ainda não implementado |
 | Próxima revisão | Revisão formal e aprovação pela equipe |
@@ -467,6 +467,7 @@ classDiagram
         +LocalDate inicioVigencia
         +LocalDate fimVigencia
         +TipoVinculoProfessor tipo
+        +boolean avaliadorSelecao
         +StatusVinculo status
         +estaVigente(em)
     }
@@ -566,6 +567,7 @@ classDiagram
         +UUID id
         +LocalDateTime oferecidaEm
         +LocalDateTime expiraEm
+        +Duration pausaOficialAcumulada
         +StatusOferta status
         +String chaveIdempotencia
         +confirmar(em)
@@ -576,6 +578,7 @@ classDiagram
     class CandidaturaSelecao {
         +UUID id
         +StatusCandidatura status
+        +long versao
         +LocalDateTime criadaEm
         +LocalDateTime atualizadaEm
         +moverPara(novoStatus)
@@ -742,8 +745,8 @@ classDiagram
 
     class ServicoProcessoSeletivo {
         +criarCandidatura(alunoId, turmaId)
-        +avaliar(candidaturaId, avaliacoes, autor)
-        +transicionar(candidaturaId, estado, autor, justificativa)
+        +avaliar(candidaturaId, avaliacoes, autor, versaoEsperada)
+        +decidir(candidaturaId, estado, autor, justificativa, versaoEsperada)
         +corrigirErro(candidaturaId, novoResultado, motivo, adminTotal)
     }
 
@@ -792,9 +795,9 @@ classDiagram
 | --- | --- |
 | `Inscricao` | Vínculo confirmado ou encerrado entre aluno e turma; não carrega posição de espera. |
 | `EntradaListaEspera` | Ordem de chegada própria da turma, posição ativa e última posição/instante após a saída. |
-| `OfertaVaga` | Reserva temporária, prazo e resposta do aluno. Uma vaga não pode possuir duas ofertas ativas. |
-| `CandidaturaSelecao` | Fluxo separado com `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO` e `CANCELADO`. |
-| `CriterioSelecao`/`AvaliacaoCriterio` | Versionar critérios em texto por modalidade e idade e registrar `ATENDEU` ou `NAO_ATENDEU`, sem pontuação automática. |
+| `OfertaVaga` | Reserva temporária, prazo de 48 horas de disponibilidade e resposta do aluno; indisponibilidade oficial registrada pausa a contagem. |
+| `CandidaturaSelecao` | Fluxo com `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO` e `CANCELADO`, usando versão para impedir sobrescrita concorrente. |
+| `CriterioSelecao`/`AvaliacaoCriterio` | Versionar critérios obrigatórios ou opcionais e registrar `ATENDEU`/`NAO_ATENDEU`; resultados orientam, mas não tomam a decisão humana final. |
 | `CorrecaoResultadoSelecao` | Corrigir erro administrativo e registrar eventual compensação após a matrícula, sem alterar ordem ou critérios. |
 | `ExcecaoInscricao` | Registro explícito da regra ignorada, justificativa e administrador total executor. Não altera silenciosamente a regra global. |
 | `PoliticaElegibilidade` | Reúne limite de duas modalidades distintas, idade, capacidade, duplicidade, status e aviso de conflito de horário. |
@@ -813,6 +816,11 @@ classDiagram
 - `sequencia` é única e crescente dentro da turma; após a saída, guardam-se última posição e instante sem novo cálculo ativo.
 - cada vaga liberada mantém no máximo uma `OfertaVaga` ativa.
 - confirmar/recusar/expirar oferta é idempotente.
+- indisponibilidade oficial registrada pausa `OfertaVaga`; problema particular de conexão não altera o prazo.
+- professor só avalia seleção com vínculo vigente e `avaliadorSelecao = true`; administrador depende de permissão explícita.
+- aprovação com critério obrigatório não atendido exige justificativa na transição.
+- sem capacidade, a candidatura permanece `EM_ANALISE`; não existe `APROVADO` sem vaga ou exceção de capacidade do administrador total.
+- a primeira decisão seletiva confirmada para uma versão prevalece; tentativa concorrente com versão antiga falha sem sobrescrever.
 - inscrição, histórico, encerramento da fila e evento de notificação devem ser gravados juntos ou com outbox confiável.
 - exceção administrativa exige administrador total e justificativa, sem segunda aprovação; nunca altera fila ou critérios seletivos.
 
@@ -1458,7 +1466,7 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 | Aula | `AGENDADA`, `REAGENDADA`, `REALIZADA`, `CANCELADA` | Reagendamento preserva a aula e seu histórico; aula cancelada não possui chamada |
 | Inscrição | `CONFIRMADA`, `CANCELADA`, `ENCERRADA` | Pedido não persiste `SOLICITADA`; fila e seleção possuem modelos próprios |
 | Lista de espera | `AGUARDANDO`, `COM_OFERTA`, `CONVERTIDA`, `DESISTENTE`, `INELEGIVEL`, `ENCERRADA` | Saída preserva última posição e instante; retorno entra no final |
-| Oferta | `ATIVA`, `CONFIRMADA`, `RECUSADA`, `EXPIRADA`, `CANCELADA` | `ATIVA` dura 48 horas corridas |
+| Oferta | `ATIVA`, `CONFIRMADA`, `RECUSADA`, `EXPIRADA`, `CANCELADA` | `ATIVA` dura 48 horas de disponibilidade; indisponibilidade oficial registrada pausa o prazo |
 | Candidatura | `INSCRITO`, `EM_ANALISE`, `APROVADO`, `REPROVADO`, `CANCELADO` | Não há recurso do aluno na primeira versão; erro administrativo é corrigido separadamente |
 | Chamada | `ABERTA`, `SALVA`, `CORRIGIDA` | Professor salva em até 24 horas; rascunho local não é `SALVA` antes da confirmação do servidor |
 | Frequência | `PRESENTE`, `AUSENTE` | Justificativa aceita não muda o estado, mas desconsidera a ausência no limite |
@@ -1531,7 +1539,7 @@ As enumerações abaixo são candidatas iniciais. Alteração de estado deve oco
 
 ## 15. Decisões incorporadas e questões específicas restantes
 
-As decisões transversais `Q-001` a `Q-023` já foram resolvidas no levantamento de requisitos e incorporadas ao modelo: e-mail no lugar de WhatsApp, relatórios e mapas como componentes futuros, processo seletivo com cinco estados, oferta de 48 horas, fila sem reordenação, chamada com rascunho local e regras de retenção aprovadas.
+As decisões transversais `Q-001` a `Q-023` já foram resolvidas no levantamento de requisitos e incorporadas ao modelo: e-mail no lugar de WhatsApp, relatórios e mapas como componentes futuros, processo seletivo com cinco estados e decisão humana, oferta com 48 horas de disponibilidade, fila sem reordenação, chamada com rascunho local e regras de retenção aprovadas.
 
 Esta primeira rodada específica do modelo também foi aceita:
 
@@ -1559,7 +1567,7 @@ A rodada estrutural final também foi aceita:
 | --- | --- | --- | --- |
 | `Q-CLS-011` | Manter uma `Pessoa` única por CPF, com conta opcional e um ou mais perfis; ser responsável não cria conta automaticamente. | `Pessoa`, `Usuario`, perfis e `ResponsavelLegal` | Aceita em 14/08/2026 |
 | `Q-CLS-012` | Depois da nova confirmação, atualizar o contato da pessoa responsável em todos os vínculos e notificar os alunos vinculados. | `Pessoa`, `VinculoResponsavel` | Aceita em 14/08/2026 |
-| `Q-CLS-013` | Critérios em texto, versionados por modalidade e idade, avaliados com `ATENDEU` ou `NAO_ATENDEU` e observação, sem pontuação automática. | `CriterioSelecao`, `AvaliacaoCriterio` | Aceita em 14/08/2026 |
+| `Q-CLS-013` | Critérios obrigatórios ou opcionais são avaliados com `ATENDEU`/`NAO_ATENDEU`, mas a decisão final é humana; vínculo/designação, justificativa excepcional, capacidade e concorrência seguem o Diagrama de Atividades. | `CriterioSelecao`, `AvaliacaoCriterio`, `CandidaturaSelecao`, `VinculoProfessorTurma` | Complementada em 17/08/2026 |
 | `Q-CLS-014` | Não persistir `SOLICITADA`; o pedido produz inscrição confirmada, fila, candidatura ou rejeição. | `Inscricao`, `EntradaListaEspera`, `CandidaturaSelecao` | Aceita em 14/08/2026 |
 | `Q-CLS-015` | Usar os sete estados de justificativa e permitir cancelamento pelo aluno somente antes da primeira decisão, após aviso dos efeitos. | `JustificativaFalta`, `DecisaoJustificativa` | Aceita em 14/08/2026 |
 
@@ -1585,4 +1593,4 @@ Não restam decisões estruturais abertas para a revisão desta versão. Compone
 | Versão | Data | Autor | Alterações | Situação |
 | --- | --- | --- | --- | --- |
 | `0.1.0` | 13/08/2026 | Heitor Leite | Refinamento do diagrama de classes do Documento de Visão em seis fluxos críticos; inclusão de serviços, interfaces, estados, invariantes, segurança, concorrência e rastreabilidade | Rascunho |
-| `0.2.0` | 14/08/2026 | Heitor Leite | Incorporação das decisões funcionais e estruturais; pessoa única por CPF, perfis e conta opcional, saúde versionada, estados definidos, fila e seleção, justificativas, ocorrências de aula, e-mail atual, integrações futuras e glossário | Pronto para revisão |
+| `0.2.0` | 17/08/2026 | Heitor Leite | Incorporação das decisões funcionais e estruturais; pessoa única por CPF, perfis e conta opcional, saúde versionada, estados definidos, fila e seleção humana com concorrência/capacidade, oferta com pausa oficial, justificativas, ocorrências de aula, e-mail atual, integrações futuras e glossário | Pronto para revisão |
